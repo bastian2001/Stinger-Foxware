@@ -9,7 +9,6 @@ u8 dartsPerSecond = 10;
 u8 pusherState = 0; // 0 = passive, 1 = extending (forward voltage), 2 = discharging (reverse voltage)
 const char fireModeNames[3][FIRE_MODE_STRING_LENGTH] = {"Semi", "Burst", "Auto"};
 
-#if HW_VERSION == 2
 fix32 solenoidCurrent = 0;
 elapsedMicros sinceExtend = 0;
 elapsedMicros sinceRetract = 0;
@@ -20,14 +19,8 @@ u32 mic[2] = {0, 0};
 bool autoPusherTiming = true;
 u8 dpsLimit = 40;
 bool pusherEnabled = false;
-#endif
 
 void initPusher() {
-#if HW_VERSION == 1
-	gpio_init(PIN_SOLENOID);
-	gpio_set_dir(PIN_SOLENOID, GPIO_OUT);
-	gpio_put(PIN_SOLENOID, 0);
-#elif HW_VERSION == 2
 	gpio_init(PIN_SOLENOID_NSLEEP);
 	gpio_init(PIN_SOLENOID_IN1);
 	gpio_init(PIN_SOLENOID_IN2);
@@ -37,12 +30,10 @@ void initPusher() {
 	gpio_put(PIN_SOLENOID_NSLEEP, 1);
 	gpio_put(PIN_SOLENOID_IN1, 0);
 	gpio_put(PIN_SOLENOID_IN2, 0);
-#endif
 	pusherState = 0;
 }
 
 void deinitPusher() {
-#if HW_VERSION == 2
 	gpio_put(PIN_SOLENOID_NSLEEP, 0);
 	gpio_put(PIN_SOLENOID_IN1, 0);
 	gpio_put(PIN_SOLENOID_IN2, 0);
@@ -50,10 +41,8 @@ void deinitPusher() {
 	gpio_set_dir(PIN_SOLENOID_IN1, GPIO_IN);
 	gpio_set_dir(PIN_SOLENOID_IN2, GPIO_IN);
 	pusherEnabled = false;
-#endif
 }
 
-#if HW_VERSION == 2
 void enablePusher() {
 #ifndef DISABLE_PUSHER
 	PIO p = pio1;
@@ -74,10 +63,8 @@ void enablePusher() {
 #endif
 	pusherEnabled = true;
 }
-#endif
 
 void pusherLoop() {
-#if HW_VERSION == 2
 	u32 absTime = micros();
 	solenoidCurrent = SOLENOID_CURR_CONV * adcConversions[CONV_RESULT_ISOLENOID];
 	static i32 lastAccel = 0;
@@ -117,17 +104,12 @@ void pusherLoop() {
 	mic[1] = mic[0];
 	mic[0] = absTime;
 	lastAccel = accelDataRaw[1];
-#endif
 }
 
 void onFireModeChange(MenuItem *_item) {
 	mainMenu->search("burstCount")->setVisible(fireMode == FIRE_BURST);
 	mainMenu->search("burstKeepFiring")->setVisible(fireMode == FIRE_BURST);
-#if HW_VERSION == 1
-	mainMenu->search("dartsPerSecond")->setVisible(fireMode != FIRE_SINGLE);
-#elif HW_VERSION == 2
 	showDpsOrLimit(nullptr);
-#endif
 	calcPushDurations(nullptr);
 }
 
@@ -142,7 +124,6 @@ void updateMaxDps(MenuItem *_item) {
 	mainMenu->search("dartsPerSecond")->setMax(1000 / (minRetractDuration + minPushDuration));
 	calcPushDurations(nullptr);
 }
-#if HW_VERSION == 2
 void showDpsOrLimit(MenuItem *_item) {
 	if (fireMode != FIRE_SINGLE && autoPusherTiming) {
 		mainMenu->search("dpsLimit")->setVisible(true);
@@ -155,23 +136,16 @@ void showDpsOrLimit(MenuItem *_item) {
 		mainMenu->search("dartsPerSecond")->setVisible(false);
 	}
 }
-#endif
 
 void extendPusher() {
 #ifndef DISABLE_PUSHER
-#if HW_VERSION == 1
-	gpio_put(PIN_SOLENOID, 1);
-#elif HW_VERSION == 2
 	if (!pusherEnabled) return;
 	gpio_put(PIN_SOLENOID_IN1, 0);
 	gpio_put(PIN_SOLENOID_IN2, 1);
 #endif
-#endif
-#if HW_VERSION == 2
 	pusherFullyRetracted = false;
 	if (pusherState != 1)
 		sinceExtend = 0;
-#endif
 #ifdef USE_BLACKBOX
 	if (pusherState != 1)
 		blSetFired();
@@ -181,9 +155,6 @@ void extendPusher() {
 
 void dischargePusher() {
 #ifndef DISABLE_PUSHER
-#if HW_VERSION == 1
-	gpio_put(PIN_SOLENOID, 0);
-#elif HW_VERSION == 2
 	if (!pusherEnabled) return;
 	gpio_put(PIN_SOLENOID_IN2, 0);
 	gpio_put(PIN_SOLENOID_IN1, 1);
@@ -191,22 +162,17 @@ void dischargePusher() {
 	if (pusherState != 2)
 		sinceRetract = 0;
 #endif
-#endif
 	pusherState = 2;
 }
 
 void retractPusher() {
 #ifndef DISABLE_PUSHER
-#if HW_VERSION == 1
-	gpio_put(PIN_SOLENOID, 0);
-#elif HW_VERSION == 2
 	if (!pusherEnabled) return;
 	gpio_put(PIN_SOLENOID_IN1, 0);
 	gpio_put(PIN_SOLENOID_IN2, 0);
 	pusherFullyExtended = false;
 	if (pusherState != 0 && pusherState != 2)
 		sinceRetract = 0;
-#endif
 #endif
 	pusherState = 0;
 }

@@ -4,15 +4,9 @@
 #error "HW_VERSION must be defined"
 #endif
 
-#if HW_VERSION == 1
-#include "Adafruit_ST7735.h"
-#elif HW_VERSION == 2
 #include "Adafruit_ST7789.h"
 #include "drivers/ledStrip.h"
 #include <NeoPixelConnect.h>
-#else
-#error "Unsupported HW_VERSION"
-#endif
 #ifdef USE_TINYUSB
 #include <Adafruit_TinyUSB.h>
 #endif
@@ -62,16 +56,10 @@
 
 #define PID_RATE 3200
 
-#if HW_VERSION == 1
-#define SPI_DISPLAY spi0 // SPI for display
-#define SPI_DISPLAY_ARDUINO SPI
-#define WIRE_TOF Wire
-#elif HW_VERSION == 2
 #define SPI_GYRO spi0 // SPI for gyro
 #define SPI_DISPLAY spi1 // SPI for display
 #define SPI_DISPLAY_ARDUINO SPI1
 #define WIRE_TOF Wire1
-#endif
 
 extern elapsedMillis bootTimer; // time since setup is done, prevents artifacts from delays in setup
 

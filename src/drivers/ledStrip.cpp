@@ -1,5 +1,3 @@
-#if HW_VERSION == 2
-
 #include "global.h"
 
 u8 ledRed = 0;
@@ -309,5 +307,3 @@ void releaseLightId(LIGHT_ID id) {
 void ledNewClock() {
 	leds.recalculateClock();
 }
-
-#endif

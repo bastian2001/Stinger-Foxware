@@ -14,15 +14,9 @@ enum BootSelections {
 #define BOOT_SELECTION_DURATION 4000
 #define BOOT_SELECTION_PAUSE 1000
 
-#if HW_VERSION == 1
-#define BOOT_OPTION_START_Y 40
-#define BOOT_TIMER_START_X 125
-#define BOOT_TIMER_END_X 155
-#elif HW_VERSION == 2
 #define BOOT_OPTION_START_Y 75
 #define BOOT_TIMER_START_X 160
 #define BOOT_TIMER_END_X 235
-#endif
 
 static u8 currentSelection = 0;
 static elapsedMillis selectionTimer = 0;
@@ -35,22 +29,14 @@ bool reboot(MenuItem *_item) {
 
 void drawBootSelect() {
 	static bool firstRun = true;
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = true;
-#endif
 	if (firstRun) {
 		firstRun = false;
 		tft.fillScreen(ST77XX_BLACK);
-#if HW_VERSION == 1
-		SET_DEFAULT_FONT;
-		printCentered("Boot Selection", SCREEN_WIDTH / 2, 0, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-		printCentered("Pull the trigger while your preferred option is selected.", SCREEN_WIDTH / 2, 12, SCREEN_WIDTH, 3, YADVANCE, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 		tft.setFont(&FreeSansBold12pt7b);
 		printCentered("Boot Selection", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 		SET_DEFAULT_FONT;
 		printCentered("Pull the trigger while your preferred option is selected.", SCREEN_WIDTH / 2, 37, SCREEN_WIDTH, 2, YADVANCE, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 		tft.setCursor(0, BOOT_OPTION_START_Y);
 		tft.print("Normal Boot\nJoystick Calibration\nFirmware Update\nInput Diagnostics\nFactory Reset");
 	}
@@ -70,9 +56,7 @@ void drawBootSelect() {
 		lastDraw = 0;
 		tft.fillRect(BOOT_TIMER_START_X, BOOT_OPTION_START_Y + currentSelection * YADVANCE + 2, (BOOT_TIMER_END_X - BOOT_TIMER_START_X) * selectionTimer / BOOT_SELECTION_DURATION, YADVANCE - 4, ST77XX_WHITE);
 	}
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = false;
-#endif
 }
 void runBootSelect() {
 	static bool firstRun = true;

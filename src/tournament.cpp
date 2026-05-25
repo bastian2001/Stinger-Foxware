@@ -12,9 +12,7 @@ bool tournamentInvertScreen = false;
 
 void applyTournamentLimits() {
 	if (tournamentMode) {
-#if HW_VERSION == 2
 		if (dpsLimit > tournamentMaxDps) dpsLimit = tournamentMaxDps;
-#endif
 		if (dartsPerSecond > tournamentMaxDps) dartsPerSecond = tournamentMaxDps;
 		calcPushDurations(nullptr);
 		if (targetRpm > tournamentMaxRpm) targetRpm = tournamentMaxRpm;
@@ -60,12 +58,10 @@ bool enableTournamentMode(MenuItem *_item) {
 	tournamentMode = true;
 	EEPROM.put(EEPROM_POS_TOURNAMENT_ENABLED, tournamentMode);
 	if (tournamentInvertScreen)
-		tft.invertDisplay(HW_VERSION == 2 ? false : true);
+		tft.invertDisplay(false);
 	mainMenu->search("tournament")->setVisible(false);
 	saveAndClose(mainMenu->search("save"));
-#if HW_VERSION == 2
 	makeRtttlSound("bossmusic:d=4,o=6,b=300:c6,g6,g#6,f6,g6,d#6,f6,d6,1c6");
-#endif
 	return false;
 }
 
@@ -76,11 +72,9 @@ void disableTournamentMode() {
 	tournamentMode = false;
 	EEPROM.put(EEPROM_POS_TOURNAMENT_ENABLED, tournamentMode);
 	EEPROM.commit();
-	tft.invertDisplay(HW_VERSION == 2 ? true : false);
+	tft.invertDisplay(true);
 	mainMenu->search("tournament")->setVisible(true);
 	loadSettings();
 	triggerFullRedraw();
-#if HW_VERSION == 2
 	makeRtttlSound("bossmusicoff:d=4,o=6,b=300:d6,a6,b6,g6,a6,f#6,g6,e6,1d6");
-#endif
 }

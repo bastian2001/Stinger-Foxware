@@ -16,33 +16,21 @@ bool extendedRpmRange = false;
 u8 rotationTickSensitivity = 0;
 const char rotationSensitivityStrings[3][10] = {"Slow", "Medium", "Fast"};
 
-#if HW_VERSION == 1
-#define DEFAULT_PID_P 50
-#define DEFAULT_PID_I 30
-#define DEFAULT_PID_D 60
-#define DEFAULT_IN_RANGE_MS 10
-#define DEFAULT_PRECISION 10
-#elif HW_VERSION == 2
 #define DEFAULT_PID_P 60
 #define DEFAULT_PID_I 12
 #define DEFAULT_PID_D 18
 #define DEFAULT_IN_RANGE_MS 1
 #define DEFAULT_PRECISION 5
-#endif
 
 void onExtRpmChange(MenuItem *_item) {
 	mainMenu->search("rpm")->setMax(extendedRpmRange ? 80000 : DEFAULT_MAX_RPM);
 }
 
 void loadSettings() {
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = true;
-#endif
 	mainMenu->init();
 	applyTournamentLimits();
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = false;
-#endif
 }
 
 void updateProfileColor(MenuItem *_item) {
@@ -61,27 +49,18 @@ bool firstBootLoop(MenuItem *item) {
 	return true;
 }
 bool firstBootEnter(MenuItem *_item) {
-#if HW_VERSION == 2
 	ledSetMode(LED_MODE::RAINBOW, LIGHT_ID::FIRSTBOOT);
-#endif
 	return true;
 }
 bool firstBootExit(MenuItem *_item) {
-#if HW_VERSION == 2
 	releaseLightId(LIGHT_ID::FIRSTBOOT);
-#endif
 	return true;
 }
 
 bool saveAndClose(MenuItem *item) {
-#if HW_VERSION == 1
-	if (!idleEnabled && MenuItem::settingsBeep)
-		MenuItem::makeSettingsBeep(1);
-#elif HW_VERSION == 2
 	if (MenuItem::settingsBeep)
 		makeRtttlSound("save:d=4,o=5,b=650:4f5,4a#5");
 	speakerLoopOnFastCore = true;
-#endif
 	item->parent->save();
 	putJoystickValsInEeprom();
 	EEPROM.commit();
@@ -92,21 +71,14 @@ bool saveAndClose(MenuItem *item) {
 		rebootReason = BootReason::MENU;
 		rp2040.reboot();
 	}
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = false;
-#endif
 	return false;
 }
 
 bool discardAndClose(MenuItem *item) {
-#if HW_VERSION == 1
-	if (!idleEnabled && MenuItem::settingsBeep)
-		MenuItem::makeSettingsBeep(1);
-#elif HW_VERSION == 2
 	if (MenuItem::settingsBeep)
 		makeRtttlSound("discard:d=4,o=5,b=650:4f5,4d5,4a#4");
 	speakerLoopOnFastCore = true;
-#endif
 	joystickInit(false);
 	loadSettings();
 	item->parent->onExit();
@@ -115,20 +87,14 @@ bool discardAndClose(MenuItem *item) {
 		rebootReason = BootReason::MENU;
 		rp2040.reboot();
 	}
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = false;
-#endif
 	return false;
 }
 
 bool jumpToSaveOption(MenuItem *item) {
 	if (lastGesture.type == GESTURE_PRESS)
 		item->setFocusedChild("save");
-#if HW_VERSION == 1
-	MenuItem::scheduleBeep(SETTINGS_BEEP_PERIOD, 1);
-#elif HW_VERSION == 2
 	MenuItem::beep(SETTINGS_BEEP_MIN_FREQ + SETTINGS_BEEP_FREQ_RANGE / 3);
-#endif
 	return false;
 }
 
@@ -149,9 +115,7 @@ void copySwapProfileCheck(MenuItem *_item) {
 	mainMenu->search("swapProfileAction")->setVisible((copyToProfile - 1) != selectedProfile);
 }
 bool copyProfile(MenuItem *item) {
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = true;
-#endif
 	mainMenu->save();
 	EEPROM.commit();
 	for (u16 i = EEPROM_PROFILE_SETTINGS_START; i < EEPROM_PROFILE_SETTINGS_START + PROFILE_EEPROM_SIZE; i++) {
@@ -162,15 +126,11 @@ bool copyProfile(MenuItem *item) {
 	}
 	EEPROM.commit();
 	exitParent(item);
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = false;
-#endif
 	return false;
 }
 bool swapProfiles(MenuItem *item) {
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = true;
-#endif
 	mainMenu->save();
 	EEPROM.commit();
 	u8 tempProfile[PROFILE_EEPROM_SIZE];
@@ -182,9 +142,7 @@ bool swapProfiles(MenuItem *item) {
 	EEPROM.commit();
 	loadSettings();
 	exitParent(item);
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = false;
-#endif
 	return false;
 }
 
@@ -198,13 +156,9 @@ void initMenu() {
 	MenuItem *motorGoToExpertMenu = new MenuItem(MenuItemType::SUBMENU, "motorGoToExpert", "Expert");
 	motorMenu
 		->addChild(new MenuItem(VariableType::I32, &targetRpm, 30000, 500, 10000, DEFAULT_MAX_RPM, 1, 0, EEPROM_POS_TARGET_RPM_FRONT, true, "rpm", "Target RPM Front", "RPM Target for front wheels during firing operation"))
-#if HW_VERSION == 1
-		->addChild(new MenuItem(&idleEnabled, false, EEPROM_POS_IDLE_ENABLED, true, "idleEn", "Idling", "Leave motors running during idle state, decreases rampup time"))
-#elif HW_VERSION == 2
 		->addChild(new MenuItem(&idleEnabled, 0, EEPROM_POS_IDLE_ENABLED, 7, (const char *)idleStrings, 9, true, "idleEn", "Idling", "Leave motors running during idle state, decreases rampup time"))
-#endif
 #ifdef USE_TOF
-		->addChild(new MenuItem(&idleOnlyWithMag, true, EEPROM_POS_IDLE_ONLY_WITH_MAG, false, "idleOnlyWithMag", HW_VERSION == 2 ? "Idle only with mag" : "No mag no idle", "Preview the idling RPM in the menu"))
+		->addChild(new MenuItem(&idleOnlyWithMag, true, EEPROM_POS_IDLE_ONLY_WITH_MAG, false, "idleOnlyWithMag", "Idle only with mag", "Preview the idling RPM in the menu"))
 #endif
 		->addChild(new MenuItem(&previewIdlingInMenu, false, EEPROM_RUNTIME_OPTION, false, "previewIdlingInMenu", "Preview Idle RPM", "Preview the idling RPM in the menu"))
 		->addChild(new MenuItem(VariableType::I32, &idleRpm, 5000, 100, 1000, 20000, 1, 0, EEPROM_POS_IDLE_RPM, true, "idleRpm", "Idle RPM", "PID Target during idle operation", 0, false, false))
@@ -242,10 +196,8 @@ void initMenu() {
 	MenuItem *firingExpertMenu = new MenuItem(MenuItemType::SUBMENU, "firingExpert", "Expert");
 	firingMenu
 		->addChild(new MenuItem(&fireMode, FIRE_CONTINUOUS, EEPROM_POS_FIRE_MODE, 2, (const char *)fireModeNames, FIRE_MODE_STRING_LENGTH, true, "fireMode", "Fire Mode", "Mode of operation for the pusher, semi-auto = fixed number of darts, auto = until trigger is released"))
-#if HW_VERSION == 2
 		->addChild(new MenuItem(VariableType::U8, &dpsLimit, 40, 1, 2, 40, 1, 0, EEPROM_POS_DPS_LIMIT, true, "dpsLimit", "Maximum DPS", "Maximum darts per second the pusher will fire, used for auto timing"))
-#endif
-		->addChild(new MenuItem(VariableType::U8, &dartsPerSecond, HW_VERSION == 2 ? 30 : 18, 1, 2, 20, 1, 0, EEPROM_POS_DARTS_PER_SECOND, true, "dartsPerSecond", "Darts/s", "Number of darts to fire per second in continuous or burst mode"))
+		->addChild(new MenuItem(VariableType::U8, &dartsPerSecond, 30, 1, 2, 20, 1, 0, EEPROM_POS_DARTS_PER_SECOND, true, "dartsPerSecond", "Darts/s", "Number of darts to fire per second in continuous or burst mode"))
 		->addChild(new MenuItem(VariableType::U8, &burstCount, 3, 1, 2, 6, 1, 0, EEPROM_POS_BURST_COUNT, true, "burstCount", "Burst Count", "Number of darts to fire in burst mode"))
 		->addChild(new MenuItem(&burstKeepFiring, false, EEPROM_POS_BURST_KEEP_FIRE, true, "burstKeepFiring", "Keep Firing", "If enabled, the blaster will keep firing after the burst count is reached until the trigger is released. If disabled, it will stop after the burst count."))
 #ifdef USE_TOF
@@ -258,37 +210,31 @@ void initMenu() {
 		->addChild(new MenuItem(&fireWoDarts, true, EEPROM_POS_FIRE_EMPTY, true, "fireEmpty", "Fire w/o darts", "Allow firing when the magazine is empty"))
 #endif
 		->addChild(new MenuItem(VariableType::U16, &pusherDecay, 50, 10, 0, 500, 1, 0, EEPROM_POS_PUSHER_DECAY, false, "pusherDecay", "Pusher Decay ms", "Time in ms during rampdown, where the pusher will not activate again, even if the trigger is pulled another time"))
-#if HW_VERSION == 2
 		->addChild(new MenuItem(&autoPusherTiming, true, EEPROM_POS_AUTO_TIMING, true, "autoTiming", "Auto Timing", "Automatically adjust the pusher timing based on the darts per second setting"))
 		->addChild(new MenuItem(MenuItemType::INFO, "manualTimingInfo", "Minimal times for manual timing:"))
-#endif
 		->addChild(new MenuItem(VariableType::U8, &minPushDuration, 15, 1, 10, 200, 1, 0, EEPROM_POS_PUSH_DURATION, false, "pushDuration", "Push ms", "Duration in ms the pusher is active for each dart"))
-		->addChild(new MenuItem(VariableType::U8, &minRetractDuration, HW_VERSION == 2 ? 18 : 40, 1, 10, 200, 1, 0, EEPROM_POS_RETRACT_DURATION, false, "retractDuration", "Min. Retract ms", "Minimum duration in ms the pusher is inactive after each dart"));
+		->addChild(new MenuItem(VariableType::U8, &minRetractDuration, 18, 1, 10, 200, 1, 0, EEPROM_POS_RETRACT_DURATION, false, "retractDuration", "Min. Retract ms", "Minimum duration in ms the pusher is inactive after each dart"));
 
 	// ======================== Battery Menu ========================
-	MenuItem *batteryMenu = new MenuItem(MenuItemType::SUBMENU, "battery", HW_VERSION == 2 ? "Battery & Standby" : "Battery");
+	MenuItem *batteryMenu = new MenuItem(MenuItemType::SUBMENU, "battery", "Battery & Standby");
 	batteryMenu
 		->addChild(new MenuItem(&batCellsSettings, 0, EEPROM_POS_BAT_CELLS, 4, (const char *)cellSettings, 9, false, "batCells", "Cell Count", "Number of cells in the battery pack"))
 		->addChild(new MenuItem(VariableType::U8, &batWarnVoltage, 65, 1, 50, 80, 100, 2, EEPROM_POS_BAT_WARN, false, "batWarn", "Warning Voltage", "Voltage below which a warning is displayed", 300))
 		->addChild(new MenuItem(VariableType::U8, &batShutdownVoltage, 50, 1, 40, 60, 100, 2, EEPROM_POS_BAT_SHUTDOWN, false, "batShutdown", "Shutdown Voltage", "Voltage at which the blaster will stop spinning temporarily", 300))
-		->addChild(new MenuItem(VariableType::U8, &inactivityTimeout, 10, 1, 0, 30, 1, 0, EEPROM_POS_INACTIVITY_TIMEOUT, false, "inactivityTimeout", HW_VERSION == 2 ? "Standby timeout" : "Inactivity Mins", "0 = Off. If the user does not interact for set time, the blaster will stop idling and beep."))
-#if HW_VERSION == 2
+		->addChild(new MenuItem(VariableType::U8, &inactivityTimeout, 10, 1, 0, 30, 1, 0, EEPROM_POS_INACTIVITY_TIMEOUT, false, "inactivityTimeout", "Standby timeout", "0 = Off. If the user does not interact for set time, the blaster will stop idling and beep."))
 		->addChild(new MenuItem(&fastStandbyEnabled, true, EEPROM_POS_FAST_STANDBY, false, "fastStandby", "Fast Standby", "Blaster will go to standby after 1 minute without motion"))
-#endif
-		->addChild(new MenuItem(VariableType::I8, &batCalibrationOffset, 0, 1, -100, 100, 100, 2, EEPROM_POS_BAT_OFFSET, false, "batVoltOffset", HW_VERSION == 2 ? "Voltage Calibration" : "Voltage Calib.", "Offset for the battery management. Positive values will make the blaster measure higher voltages."))
+		->addChild(new MenuItem(VariableType::I8, &batCalibrationOffset, 0, 1, -100, 100, 100, 2, EEPROM_POS_BAT_OFFSET, false, "batVoltOffset", "Voltage Calibration", "Offset for the battery management. Positive values will make the blaster measure higher voltages."))
 		->addChild(new MenuItem(MenuItemType::CUSTOM, "storageMode", "Storage Mode", "Spin the motors down to storage voltage"));
 
 	// ======================== User Interface Settings ========================
 	MenuItem *interfaceMenu = new MenuItem(MenuItemType::SUBMENU, "interface", "User Interface");
 	interfaceMenu
-		->addChild(new MenuItem(&MenuItem::settingsBeep, HW_VERSION == 2 ? true : false, EEPROM_POS_SETTINGS_BEEP, false, "settingsBeep", "Settings Beep", "Beep when navigating through the menu"))
-#if defined(USE_TOF) && HW_VERSION == 2
+		->addChild(new MenuItem(&MenuItem::settingsBeep, true, EEPROM_POS_SETTINGS_BEEP, false, "settingsBeep", "Settings Beep", "Beep when navigating through the menu"))
+#if defined(USE_TOF)
 		->addChild(new MenuItem(&beepOnMagChange, true, EEPROM_POS_BEEP_ON_MAG_CHANGE, false, "beepOnMagChange", "Mag. insert sound", "Beep when the magazine is inserted or removed"))
 #endif
-		->addChild(new MenuItem(&rotationTickSensitivity, 1, EEPROM_POS_ROTATION_SENSITIVITY, 2, (const char *)rotationSensitivityStrings, 10, false, "rotationTickSensitivity", HW_VERSION == 2 ? "Joystick dial speed" : "Joystick dial", "Sensitivity of dial, when loading up the dart counter or changing menu values via the joystick"))
-#if HW_VERSION == 2
+		->addChild(new MenuItem(&rotationTickSensitivity, 1, EEPROM_POS_ROTATION_SENSITIVITY, 2, (const char *)rotationSensitivityStrings, 10, false, "rotationTickSensitivity", "Joystick dial speed", "Sensitivity of dial, when loading up the dart counter or changing menu values via the joystick"))
 		->addChild(new MenuItem(VariableType::U8, &brightnessMenu, 255, 5, 0, 255, 1, 0, EEPROM_POS_LED_BRIGHTNESS, false, "ledBrightness", "LED Brightness", "Brightness of the LED"))
-#endif
 		;
 
 	// ======================== Profile Settings ========================
@@ -334,16 +280,12 @@ void initMenu() {
 		->addChild(new MenuItem(deviceName, 16, "Stinger", EEPROM_POS_DEVICE_NAME, false, "deviceName", "Device Name"))
 		->addChild(new MenuItem(ownerName, 32, "John Doe", EEPROM_POS_OWNER_NAME, false, "ownerName", "Owner"))
 		->addChild(new MenuItem(ownerContact, 32, "john.doe@example.com", EEPROM_POS_OWNER_CONTACT, false, "ownerContact", "Contact"))
-#if HW_VERSION == 2
 		->addChild(new MenuItem(&startSoundId, 1, EEPROM_POS_STARTUP_SOUND, 5, (const char *)soundNames, 20, false, "startupSound", "Startup Sound", "Sound played at boot"))
-#endif
 		;
 	safetyMenu
 		->addChild(new MenuItem(&bootUnlockNeeded, true, EEPROM_POS_BOOT_SAFE, false, "bootUnlockNeeded", "SAFE after boot", "Locks the blaster before finishing boot"))
-#if HW_VERSION == 2
 		->addChild(new MenuItem(&freeFallDetectionEnabled, true, EEPROM_POS_FALL_DETECTION, false, "fallDetection", "Fall Detection", "Enable fall detection, the blaster will stop idling and prevent firing if it detects a fall"))
 		->addChild(new MenuItem(&maxFireAngleSetting, 4, EEPROM_POS_FIRE_ANGLE_LIMIT, 5, (const char *)fireAngleStrings, 9, false, "fireAngle", "Max Fire Angle", "Maximum angle at which the blaster will fire, to prevent darts from falling out"))
-#endif
 		->addChild(new MenuItem(&extendedRpmRange, false, EEPROM_POS_EXTENDED_RPM_RANGE, false, "extendedRpmRange", "Allow higher RPM", "Enable up to 80k RPM. Internal testing has shown that the firing speed is less consistent at these speeds, as the darts enter dynamic friction. Wear on darts is increased however."))
 		->addChild(new MenuItem(&stallDetectionEnabled, true, EEPROM_POS_STALL_DETECTION, false, "stallDetection", "Stall Detection", "Enable stall detection, which will stop the motors if they are blocked or stalled."));
 	hardwareMenu
@@ -355,9 +297,7 @@ void initMenu() {
 		->addChild(escTempCalibration)
 		->addChild(new MenuItem(MenuItemType::CUSTOM, "inputDiagnostics", "Input Diagnostics"));
 	resetMenu
-#if HW_VERSION == 2
 		->setOnExitFunction(rickroll)
-#endif
 		->addChild(new MenuItem(MenuItemType::INFO, "resetInfo", "This will reset the whole blaster to the factory default. Continue?"))
 		->addChild(new MenuItem(MenuItemType::ACTION, "cancelReset", "No, cancel"))
 		->addChild(new MenuItem(MenuItemType::ACTION, "resetAction", "Yes, reset"));
@@ -369,11 +309,7 @@ void initMenu() {
 		->setOnEnterFunction(enterBalancing)
 		->setCustomLoop(balancingLoop);
 	escConfigMenu
-#if HW_VERSION == 1
-		->addChild(new MenuItem(MenuItemType::INFO, "escConfigInfo", "You are about to reboot into ESC configuration mode. In this mode, you can use software like BLHeliSuite32 to configure the ESCs. All current changes will be saved."))
-#elif HW_VERSION == 2
 		->addChild(new MenuItem(MenuItemType::INFO, "escConfigInfo", "You are about to reboot into ESC configuration mode. In this mode, you can use software like AM32 Configurator to configure the ESCs. All current changes will be saved."))
-#endif
 		->addChild(new MenuItem(MenuItemType::ACTION, "startEscConfig", "Ok"))
 		->addChild(new MenuItem(MenuItemType::ACTION, "exitEscConfig", "Back"));
 	escTempCalibration
@@ -396,11 +332,11 @@ void initMenu() {
 	MenuItem *tournamentPage2 = new MenuItem(MenuItemType::SUBMENU, "tournamentPage2", "Next Page");
 	tournamentMenu
 		->addChild(new MenuItem(VariableType::U32, &tournamentMaxRpm, DEFAULT_MAX_RPM, 1000, 20000, 80000, 1, 0, EEPROM_POS_TOURNAMENT_MAXRPM, false, "tournamentMaxRpm", "Max RPM", "Maximum RPM allowed in tournament mode"))
-		->addChild(new MenuItem(VariableType::U8, &tournamentMaxDps, HW_VERSION == 2 ? 30 : 18, 1, 2, 40, 1, 0, EEPROM_POS_TOURNAMENT_MAXDPS, false, "tournamentMaxDps", "Max DPS", "Maximum darts per second allowed in tournament mode"))
+		->addChild(new MenuItem(VariableType::U8, &tournamentMaxDps, 30, 1, 2, 40, 1, 0, EEPROM_POS_TOURNAMENT_MAXDPS, false, "tournamentMaxDps", "Max DPS", "Maximum darts per second allowed in tournament mode"))
 		->addChild(new MenuItem(&allowSemiAuto, true, EEPROM_POS_TOURNAMENT_ALLOW_SEMI_AUTO, false, "allowSemiAuto", "Allow Semi-Auto", "Allow semi-auto in tournament mode"))
 		->addChild(new MenuItem(&allowFullAuto, true, EEPROM_POS_TOURNAMENT_ALLOW_FULL_AUTO, false, "allowFullAuto", "Allow Full-Auto", "Allow full-auto in tournament mode"))
 		->addChild(new MenuItem(&tournamentInvertScreen, false, EEPROM_POS_TOURNAMENT_INVERT_SCREEN, false, "tournamentInvertScreen", "Invert Screen", "Invert the screen in tournament mode"))
-		->addChild(new MenuItem(&tournamentBlockMenu, false, EEPROM_POS_TOURNAMENT_BLOCK_MENU, false, "tournamentBlockMenu", HW_VERSION == 2 ? "Block Menu Access" : "Block Menu", "Menu access can be blocked in tournament mode"))
+		->addChild(new MenuItem(&tournamentBlockMenu, false, EEPROM_POS_TOURNAMENT_BLOCK_MENU, false, "tournamentBlockMenu", "Block Menu Access", "Menu access can be blocked in tournament mode"))
 		->addChild(tournamentPage2);
 	tournamentPage2
 		->addChild(new MenuItem(MenuItemType::INFO, "tournamentInfo", "This will enable Tournament Mode. To exit tournament mode, power the blaster via USB ONLY. Factory reset is disabled."))
@@ -481,9 +417,7 @@ void initMenu() {
 	mainMenu->search("dartsPerSecond")->setOnChangeFunction(calcPushDurations);
 	mainMenu->search("pushDuration")->setOnChangeFunction(updateMaxDps);
 	mainMenu->search("retractDuration")->setOnChangeFunction(updateMaxDps);
-#if HW_VERSION == 2
 	mainMenu->search("autoTiming")->setOnChangeFunction(showDpsOrLimit);
-#endif
 	mainMenu->search("docs")->setCustomDrawFull(onQrFullDraw);
 	mainMenu->search("idleRpm")->setCustomLoop([](MenuItem *_item) {
 		if (previewIdlingInMenu) {
@@ -503,12 +437,10 @@ void initMenu() {
 	mainMenu->search("enterTournamentMode")
 		->setOnEnterFunction(enableTournamentMode)
 		->setVisible(false);
-#if HW_VERSION == 2
 	mainMenu->search("ledBrightness")
 		->setOnEnterFunction(onBrightnessEnter)
 		->setOnExitFunction(onBrightnessExit)
 		->setOnChangeFunction(onBrightnessChange);
-#endif
 	loadSettings();
 	MenuItem::settingsAreInEeprom = true;
 

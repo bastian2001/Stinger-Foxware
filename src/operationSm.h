@@ -6,9 +6,6 @@ extern volatile u32 forceNewOpState;
 extern u8 selectedProfile;
 extern bool joystickLockout;
 extern bool idleOnlyWithMag;
-#if HW_VERSION == 1
-extern bool idleEnabled;
-#elif HW_VERSION == 2
 extern u8 idleEnabled;
 const char idleStrings[8][9] = {
 	"Off",
@@ -30,7 +27,6 @@ const char fireAngleStrings[6][9] = {
 	"No limit",
 };
 extern fix32 actualDps;
-#endif
 extern bool bootUnlockNeeded;
 extern u16 rampdownTime, rampupTimeout;
 extern u8 timeoutMode;

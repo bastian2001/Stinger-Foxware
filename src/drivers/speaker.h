@@ -1,5 +1,4 @@
 #pragma once
-#if HW_VERSION == 2
 
 #include "utils/typedefs.h"
 #include <Arduino.h>
@@ -57,4 +56,3 @@ void makeSweepSound(u16 startFrequency, u16 endFrequency, u16 duration, u16 tOnM
 /// @brief Play a sound in RTTTL format
 /// @param song RTTTL formatted song string
 void makeRtttlSound(const char *song);
-#endif

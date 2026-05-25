@@ -13,8 +13,6 @@ extern u8 batState;
 extern bool batWarning;
 extern i8 batCalibrationOffset;
 extern u8 powerSource;
-
-#if HW_VERSION == 2
 constexpr fix32 ESC_CURR_CONV = 3.3 / 4096 * 150;
 extern fix32 batCurrent;
 extern fix32 escCurrentAdc;
@@ -22,7 +20,6 @@ extern fix64 mahUsed;
 extern volatile bool forceInitBat;
 
 void batCurrLoop();
-#endif
 
 enum BatState {
 	BAT_SETUP,

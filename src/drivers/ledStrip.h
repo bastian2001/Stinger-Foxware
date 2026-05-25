@@ -1,4 +1,3 @@
-#if HW_VERSION == 2
 #pragma once
 #include "menu/menuItem.h"
 #include "utils/typedefs.h"
@@ -59,5 +58,3 @@ void setMasterBrightness(u8 brightness);
 void releaseLightId(LIGHT_ID id);
 
 void ledNewClock();
-
-#endif

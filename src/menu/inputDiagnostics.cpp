@@ -93,19 +93,6 @@ private:
 	char val2[32];
 };
 
-#if HW_VERSION == 1
-#define XDIM 48
-#define XDIM2 96
-#define DEGREE_SYMBOL "\xF8"
-DiagText textVBat(XDIM, YADVANCE * 2, XDIM2);
-DiagText textJoyX(XDIM, YADVANCE * 3, XDIM2);
-DiagText textJoyY(XDIM, YADVANCE * 4, XDIM2);
-DiagText textAngMag(XDIM, YADVANCE * 5);
-DiagText textTrig(XDIM, YADVANCE * 6);
-DiagText textESC(XDIM, YADVANCE * 7);
-DiagText textTOF(XDIM, YADVANCE * 8, XDIM2);
-const char titles[8][10] = {"VBat:", "JoyX:", "JoyY:", "", "Trig:", "ESC:", "TOF:"};
-#elif HW_VERSION == 2
 i8 page = 1;
 #define XDIM 52
 #define XDIM2 104
@@ -131,7 +118,6 @@ DiagText *textsPage1[9] = {&textVBat, &textIEsc, &textISol, &textJoyX, &textJoyY
 DiagText *textsPage2[8] = {&textRotX, &textRotY, &textRotZ, &textAccX, &textAccY, &textAccZ, &textRPY, &textVVel};
 const char titles1[9][10] = {"VBat:", "IEsc:", "ISol:", "JoyX:", "JoyY:", "", "Trig:", "ESC:", "TOF:"};
 const char titles2[8][10] = {"RotX:", "RotY:", "RotZ:", "AccX:", "AccY:", "AccZ:", "R/P/Y:", "upVel:"};
-#endif
 
 void drawInputDiagnostics(MenuItem *item) {
 	static elapsedMillis lastUpdate = 0;
@@ -141,13 +127,6 @@ void drawInputDiagnostics(MenuItem *item) {
 		SET_DEFAULT_FONT;
 		printCentered("Input Diagnostics", SCREEN_WIDTH / 2, 0, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 		tft.setCursor(0, YADVANCE);
-#if HW_VERSION == 1
-		tft.print("Hold left to exit");
-		for (u8 i = 0; i < 8; i++) {
-			tft.setCursor(0, YADVANCE * (i + 2));
-			tft.print(titles[i]);
-		}
-#elif HW_VERSION == 2
 		tft.printf("Hold left to exit, hold right for page %d", page == 1 ? 2 : 1);
 		for (u8 i = 0; i < 9; i++) {
 			if (page == 1) {
@@ -169,7 +148,6 @@ void drawInputDiagnostics(MenuItem *item) {
 				textsPage2[i]->disable();
 			}
 		}
-#endif
 		item->fullRedraw = false;
 	}
 	if (lastUpdate >= 100) {
@@ -180,7 +158,6 @@ void drawInputDiagnostics(MenuItem *item) {
 		snprintf(buf, 32, "%.1fV", fix32(batVoltage).getf32());
 		textVBat.updateValue2(buf);
 
-#if HW_VERSION == 2
 		snprintf(buf, 32, "%d", adcConversions[CONV_RESULT_IBAT]);
 		textIEsc.updateValue(buf);
 		snprintf(buf, 32, "%.1fA", fix32(escCurrentAdc).getf32());
@@ -190,7 +167,6 @@ void drawInputDiagnostics(MenuItem *item) {
 		textISol.updateValue(buf);
 		snprintf(buf, 32, "%.2fA", solenoidCurrent.getf32());
 		textISol.updateValue2(buf);
-#endif
 
 		snprintf(buf, 32, "%d", adcConversions[CONV_RESULT_JOYSTICK_X]);
 		textJoyX.updateValue(buf);
@@ -229,7 +205,6 @@ void drawInputDiagnostics(MenuItem *item) {
 		snprintf(buf, 32, "%d", triggerState);
 		textTrig.updateValue(buf);
 
-#if HW_VERSION == 2
 		// all HW2 specific values
 		snprintf(buf, 32, "%d", gyroDataRaw[0]);
 		textRotX.updateValue(buf);
@@ -266,7 +241,6 @@ void drawInputDiagnostics(MenuItem *item) {
 
 		snprintf(buf, 32, "%.1fm/s", upVel.getf32());
 		textVVel.updateValue(buf);
-#endif
 	}
 }
 
@@ -282,7 +256,6 @@ bool onInputDiagLeft(MenuItem *item) {
 }
 
 bool onInputDiagRight(MenuItem *item) {
-#if HW_VERSION == 2
 	static bool allowSwitch = false;
 	if (lastGesture.direction == Direction::RIGHT && lastGesture.type == GESTURE_PRESS) allowSwitch = true;
 	if (lastGesture.direction == Direction::RIGHT && lastGesture.type == GESTURE_HOLD && lastGesture.duration > 2000 && allowSwitch) {
@@ -290,6 +263,5 @@ bool onInputDiagRight(MenuItem *item) {
 		item->fullRedraw = true;
 		allowSwitch = false;
 	}
-#endif
 	return false;
 }

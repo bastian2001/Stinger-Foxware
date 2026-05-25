@@ -1,4 +1,3 @@
-#if HW_VERSION == 2
 #include "global.h"
 
 elapsedMillis soundStart;
@@ -368,5 +367,3 @@ void makeRtttlSound(const char *song) {
 	soundStart = 0;
 	soundType = 2;
 }
-
-#endif

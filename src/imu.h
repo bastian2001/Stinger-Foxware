@@ -1,7 +1,6 @@
 #include "utils/fixedPointInt.h"
 #include "utils/quaternion.h"
 #include <Arduino.h>
-#if HW_VERSION == 2
 
 constexpr f32 RAW_TO_RAD_PER_SEC = PI * 4000 / 65536 / 180; // 2000deg per second, but raw is only +/-.5
 constexpr fix32 RAW_TO_M_PER_SEC2 = (9.81 * 32 + 0.5) / 65536; // +/-16g (0.5 for rounding)
@@ -27,4 +26,3 @@ void imuInit();
 void updateAtti1();
 void updateAtti2();
 void freeFallDetection();
-#endif

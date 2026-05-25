@@ -1,5 +1,4 @@
 #include "global.h"
-#if HW_VERSION == 2
 
 // adapted from https://www.digikey.de/de/maker/projects/raspberry-pi-pico-rp2040-spi-example-with-micropython-and-cc/9706ea0cf3784ee98e35ff49188ee045
 int regRead(spi_inst_t *spi, const uint cs, const u8 reg, u8 *buf, const u16 nbytes, const u16 delay, u8 dummy) {
@@ -42,4 +41,3 @@ void initGyroSpi() {
 	gpio_put(PIN_GYRO_CS, 1);
 	sleep_ms(2);
 }
-#endif

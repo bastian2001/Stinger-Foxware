@@ -17,7 +17,6 @@ extern const char fireModeNames[3][FIRE_MODE_STRING_LENGTH];
 
 void initPusher();
 void deinitPusher();
-#if HW_VERSION == 2
 extern bool pusherEnabled;
 void enablePusher();
 constexpr fix32 SOLENOID_CURR_CONV = 3.3 / 4096 * 3075 / 700;
@@ -28,7 +27,6 @@ extern bool autoPusherTiming;
 extern elapsedMicros sinceExtend;
 extern u8 dpsLimit;
 void showDpsOrLimit(MenuItem *_item);
-#endif
 void pusherLoop();
 void onFireModeChange(MenuItem *_item);
 void calcPushDurations(MenuItem *_item);

@@ -15,19 +15,11 @@ enum RemapState : u8 {
 	REMAP_ERROR
 };
 static u8 lastRemapState = REMAP_ERROR;
-#if HW_VERSION == 1
-#define MOTOR_SCREEN_X_1 21
-#define MOTOR_SCREEN_X_2 59
-#define MOTOR_SCREEN_Y_1 21
-#define MOTOR_SCREEN_Y_2 59
-#define MOTOR_SCREEN_RADIUS 16
-#elif HW_VERSION == 2
 #define MOTOR_SCREEN_X_1 35
 #define MOTOR_SCREEN_X_2 85
 #define MOTOR_SCREEN_Y_1 56
 #define MOTOR_SCREEN_Y_2 106
 #define MOTOR_SCREEN_RADIUS 22
-#endif
 
 bool startRemap(MenuItem *_item) {
 	if (tournamentMode) return false;
@@ -92,14 +84,6 @@ bool remapLoop(MenuItem *item) {
 		if (newState || item->fullRedraw) {
 			tft.fillScreen(ST77XX_BLACK);
 			tft.setTextColor(ST77XX_WHITE);
-#if HW_VERSION == 1
-			tft.setFont(&FreeSans9pt7b);
-			printCentered("Motor mapping", SCREEN_WIDTH / 2, 12, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			tft.setTextWrap(true);
-			SET_DEFAULT_FONT;
-			tft.setCursor(0, 30);
-			tft.print("Move the joystick in the\ndirection of the spinning\nmotor.\nPress right to start.\n");
-#elif HW_VERSION == 2
 			tft.setFont(&FreeSansBold12pt7b);
 			printCentered("Motor mapping", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			tft.setFont(&FreeSans9pt7b);
@@ -107,7 +91,6 @@ bool remapLoop(MenuItem *item) {
 			SET_DEFAULT_FONT;
 			tft.setCursor(0, 40);
 			tft.print("Move the joystick in the direction\nof the spinning motor.\nPress right to start.\n");
-#endif
 			if (!firstBoot) tft.print("Hold left to exit.");
 		}
 		if (gestureUpdated) {
@@ -131,15 +114,13 @@ bool remapLoop(MenuItem *item) {
 		if ((newState && remapState == REMAP_ESC1) || item->fullRedraw) {
 			tft.fillScreen(ST77XX_BLACK);
 			tft.setTextColor(ST77XX_WHITE);
-#if HW_VERSION == 2
 			tft.setFont(&FreeSansBold12pt7b);
 			printCentered("Motor mapping", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 			SET_DEFAULT_FONT;
 			if (firstBoot)
-				printCentered("Which motor is spinning? Hold left to restart.", SCREEN_WIDTH * 3 / 4, HW_VERSION == 1 ? 20 : 50, SCREEN_WIDTH / 2, 8, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
+				printCentered("Which motor is spinning? Hold left to restart.", SCREEN_WIDTH * 3 / 4, 50, SCREEN_WIDTH / 2, 8, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			else
-				printCentered("Which motor is spinning? Hold left to exit.", SCREEN_WIDTH * 3 / 4, HW_VERSION == 1 ? 20 : 50, SCREEN_WIDTH / 2, 8, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
+				printCentered("Which motor is spinning? Hold left to exit.", SCREEN_WIDTH * 3 / 4, 50, SCREEN_WIDTH / 2, 8, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			tft.drawCircle(MOTOR_SCREEN_X_1, MOTOR_SCREEN_Y_1, MOTOR_SCREEN_RADIUS + 1, ST77XX_WHITE);
 			tft.drawCircle(MOTOR_SCREEN_X_1, MOTOR_SCREEN_Y_2, MOTOR_SCREEN_RADIUS + 1, ST77XX_WHITE);
 			tft.drawCircle(MOTOR_SCREEN_X_2, MOTOR_SCREEN_Y_1, MOTOR_SCREEN_RADIUS + 1, ST77XX_WHITE);
@@ -207,17 +188,11 @@ bool remapLoop(MenuItem *item) {
 			tft.fillScreen(ST77XX_BLACK);
 			tft.setTextColor(ST77XX_WHITE);
 			SET_DEFAULT_FONT;
-#if HW_VERSION == 1
-			printCentered("Test the new config.", SCREEN_WIDTH * 3 / 4, 0, SCREEN_WIDTH / 2, 2, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			printCentered("Hold right to confirm", SCREEN_WIDTH * 3 / 4, 25, SCREEN_WIDTH / 2, 2, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			printCentered("Hold left to discard", SCREEN_WIDTH * 3 / 4, 50, SCREEN_WIDTH / 2, 2, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 			printCentered("Test the new config.", SCREEN_WIDTH * 3 / 4, 40, SCREEN_WIDTH / 2, 2, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			printCentered("Hold right to confirm", SCREEN_WIDTH * 3 / 4, 73, SCREEN_WIDTH / 2, 2, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			printCentered("Hold left to discard", SCREEN_WIDTH * 3 / 4, 106, SCREEN_WIDTH / 2, 2, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			tft.setFont(&FreeSansBold12pt7b);
 			printCentered("Motor mapping", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
-#endif
 			tft.drawCircle(MOTOR_SCREEN_X_1, MOTOR_SCREEN_Y_1, MOTOR_SCREEN_RADIUS + 1, ST77XX_WHITE);
 			tft.drawCircle(MOTOR_SCREEN_X_1, MOTOR_SCREEN_Y_2, MOTOR_SCREEN_RADIUS + 1, ST77XX_WHITE);
 			tft.drawCircle(MOTOR_SCREEN_X_2, MOTOR_SCREEN_Y_1, MOTOR_SCREEN_RADIUS + 1, ST77XX_WHITE);
@@ -274,14 +249,6 @@ bool remapLoop(MenuItem *item) {
 			tft.setTextColor(ST77XX_RED);
 			tft.setTextWrap(true);
 			SET_DEFAULT_FONT;
-#if HW_VERSION == 1
-			printCentered("Invalid motor config", SCREEN_WIDTH / 2, 3, SCREEN_WIDTH, 1, 8, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			tft.setTextColor(ST77XX_WHITE);
-			if (firstBoot)
-				printCentered("Retry >", SCREEN_WIDTH / 2, 40, SCREEN_WIDTH, 1, 8, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			else
-				printCentered("< Exit   Retry >", SCREEN_WIDTH / 2, 40, SCREEN_WIDTH, 1, 8, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 			printCentered("Invalid motor config", SCREEN_WIDTH / 2, 40, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
 			tft.setTextColor(ST77XX_WHITE);
 			if (firstBoot)
@@ -291,7 +258,6 @@ bool remapLoop(MenuItem *item) {
 			tft.setFont(&FreeSansBold12pt7b);
 			printCentered("Motor mapping", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
 			DEBUG_PRINTSLN("Invalid motor config, remap aborted.");
-#endif
 		}
 		if (gestureUpdated) {
 			gestureUpdated = false;

@@ -30,7 +30,7 @@ void adjustProfileDefaults() {
 	profileColor[0] = 0;
 	profileColor[1] = 255;
 	profileColor[2] = 0;
-	idleEnabled = HW_VERSION == 2 ? 5 : 1; // idle permanent on V1, +- 25° on V2
+	idleEnabled = 5; // idle permanent on V1, +- 25° on V2
 	targetRpm = 40000;
 	fireMode = FIRE_CONTINUOUS;
 	saveAndClose(save);
@@ -43,7 +43,7 @@ void adjustProfileDefaults() {
 	profileColor[0] = 255;
 	profileColor[1] = 255;
 	profileColor[2] = 0;
-	idleEnabled = HW_VERSION == 2 ? 5 : 1; // idle permanent on V1, +- 25° on V2
+	idleEnabled = 5; // idle permanent on V1, +- 25° on V2
 	fireMode = FIRE_BURST;
 	targetRpm = 40000;
 	burstCount = 3;
@@ -60,9 +60,7 @@ void adjustProfileDefaults() {
 	idleEnabled = 0;
 	fireMode = FIRE_CONTINUOUS;
 	dartsPerSecond = 7;
-#if HW_VERSION == 2
 	dpsLimit = 7;
-#endif
 	saveAndClose(save);
 
 	// ================== Profile 5 ==================
@@ -73,7 +71,7 @@ void adjustProfileDefaults() {
 	profileColor[0] = 0;
 	profileColor[1] = 0;
 	profileColor[2] = 255;
-	idleEnabled = HW_VERSION == 2 ? 4 : 1; // idle permanent on V1, +- 20° on V2
+	idleEnabled = 4; // idle permanent on V1, +- 20° on V2
 	fireMode = FIRE_SINGLE;
 	targetRpm = DEFAULT_MAX_RPM;
 	saveAndClose(save);
@@ -153,14 +151,12 @@ void eepromMigrate(u8 major, u8 minor, u8 patch) {
 	if (major == 2 && minor == 0 && patch == 1) {
 		bool b = true;
 		EEPROM.put(EEPROM_POS_IDLE_ONLY_WITH_MAG, b);
-#if HW_VERSION == 2
 		u8 maxTemp;
 		EEPROM.get(EEPROM_POS_ESC_MAX_TEMP, maxTemp);
 		if (maxTemp == 90) {
 			maxTemp = 100;
 			EEPROM.put(EEPROM_POS_ESC_MAX_TEMP, maxTemp);
 		}
-#endif
 		major = 2;
 		minor = 1;
 		patch = 0;
@@ -203,19 +199,11 @@ void requestClearEeprom(u8 major, u8 minor, u8 patch) {
 	// halt program indefinitely here, wait for trigger input, then clear EEPROM
 	initDisplay();
 	tft.fillScreen(ST77XX_BLACK);
-#if HW_VERSION == 1
-	const u8 y1 = 0;
-	const u8 y2 = 16;
-	const u8 y3 = 64;
-	const u8 y4 = 72;
-	SET_DEFAULT_FONT;
-#elif HW_VERSION == 2
 	const u8 y1 = 20;
 	const u8 y2 = 40;
 	const u8 y3 = 105;
 	const u8 y4 = 120;
 	tft.setFont(&FreeSansBold12pt7b);
-#endif
 	tft.setTextColor(ST77XX_WHITE);
 	printCentered("Reset Stinger", SCREEN_WIDTH / 2, y1, SCREEN_WIDTH, 1, 22, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 	SET_DEFAULT_FONT;

@@ -6,11 +6,6 @@ u8 selectedProfile = 0;
 u8 enabledProfiles = 5;
 bool idleOnlyWithMag = true;
 bool joystickLockout = false;
-#if HW_VERSION == 1
-bool idleEnabled = false;
-#define CHECK_IDLE_EN (idleEnabled && (!idleOnlyWithMag || (magPresent || !foundTof)))
-#define CHECK_ANGLE_OK (true)
-#elif HW_VERSION == 2
 u8 idleEnabled = 0;
 const fix32 IDLE_5_DEG = fix32(5.0 * PI / 180.0);
 bool checkIdle() {
@@ -25,7 +20,6 @@ u8 maxFireAngleSetting = 0;
 fix32 actualDps = 0;
 elapsedMillis sinceFirstPush = 0;
 elapsedMillis safeFlipTimer = 4000;
-#endif
 u16 rampdownTime = 500;
 u16 rampupTimeout = 1000;
 u8 timeoutMode = 0; // 0 = just fire, 1 = rampdown
@@ -60,11 +54,7 @@ bool newProfileFlag = false;
 
 u16 revAfterFire = 0;
 
-#if HW_VERSION == 1
-#define BOOT_SEQUENCE_DIV 10
-#elif HW_VERSION == 2
 #define BOOT_SEQUENCE_DIV 2
-#endif
 
 #define CHECK_NO_EDT ((escStatusTimer[0] > 2500 || escStatusTimer[1] > 2500 || escStatusTimer[2] > 2500 || escStatusTimer[3] > 2500) && edtEnableTimer > 200)
 #ifdef USE_TOF
@@ -104,11 +94,9 @@ void __not_in_flash_func(runOperationSm)() {
 		static u8 edtProgress = 0;
 		static u8 bootGraceTimeProgress = 0;
 		static elapsedMillis escCheckTimer = 0;
-#if HW_VERSION == 2
 		if (firstRun) {
 			ledSetMode(LED_MODE::RAINBOW, LIGHT_ID::BOOT, 10000);
 		}
-#endif
 		// After 3 good sequences (total 1.5s), we can move on. A good sequence has at least one successful bidir dshot response like status
 		bool isChecked = false;
 		if (escCheckTimer > 500) {
@@ -153,9 +141,7 @@ void __not_in_flash_func(runOperationSm)() {
 			if (
 				goodSequences >= 6 && bootTimer > 3000 && !triggerState && escStatusOk) {
 				operationState = bootUnlockNeeded ? STATE_SAFE : STATE_OFF;
-#if HW_VERSION == 2
 				releaseLightId(LIGHT_ID::BOOT);
-#endif
 				triggerUpdateFlag = false;
 			} else if (
 				goodSequences >= 6 && bootTimer > 3000 && triggerState && escStatusOk && !printedTrigMsg) {
@@ -173,9 +159,7 @@ void __not_in_flash_func(runOperationSm)() {
 		}
 		if (bootTimer > 10000 && !triggerState) {
 			operationState = bootUnlockNeeded ? STATE_SAFE : STATE_OFF;
-#if HW_VERSION == 2
 			releaseLightId(LIGHT_ID::BOOT);
-#endif
 			triggerUpdateFlag = false;
 		}
 		i32 timeoutProgress = ((i32)bootTimer - 6000) / 40;
@@ -193,7 +177,6 @@ void __not_in_flash_func(runOperationSm)() {
 		setAllThrottles(0);
 	} break;
 	case STATE_MENU: {
-#if HW_VERSION == 2
 		static u8 pusherCycles = 50;
 
 		if (firstRun) {
@@ -213,12 +196,9 @@ void __not_in_flash_func(runOperationSm)() {
 			pusherCycles = 0;
 			extendPusher();
 		}
-#endif
 		if (openedMenu == nullptr && !firstBoot) {
 			operationState = STATE_OFF;
-#if HW_VERSION == 2
 			releaseLightId(LIGHT_ID::MENU);
-#endif
 			triggerUpdateFlag = false;
 			firstMenuRun = true;
 			resetPid();
@@ -284,9 +264,7 @@ void __not_in_flash_func(runOperationSm)() {
 			if (wasIdling && !CHECK_IDLE_EN) {
 				sendEdtStart();
 			}
-#if HW_VERSION == 2
 			ledSetMode(LED_MODE::STATIC, LIGHT_ID::HOMESCREEN, 0, profileColor[0], profileColor[1], profileColor[2]);
-#endif
 			DEBUG_PRINTF("Profile %d\n", selectedProfile);
 		}
 	} break;
@@ -297,9 +275,7 @@ void __not_in_flash_func(runOperationSm)() {
 		static bool enteringJoystickLock = false;
 		if (firstRun) {
 			updatingDartCount = false;
-#if HW_VERSION == 2
 			ledSetMode(LED_MODE::STATIC, LIGHT_ID::HOMESCREEN, 0, profileColor[0], profileColor[1], profileColor[2]);
-#endif
 		}
 		if (gestureUpdated) {
 			gestureUpdated = false;
@@ -316,12 +292,10 @@ void __not_in_flash_func(runOperationSm)() {
 				} else if (lastGesture.angle >= 260 && lastGesture.angle <= 280) {
 					joystickLockTimer = 0;
 					enteringJoystickLock = true;
-#if HW_VERSION == 2
 					if (joystickLockout && MenuItem::settingsBeep) {
 						makeRtttlSound("unlock:d=4,o=5,b=60:12f,12f#,12g,12g#,12a,15a#,32p,44a#,44f");
 						speakerLoopOnFastCore2 = true;
 					}
-#endif
 				} else if (lastGesture.angle > 280 && lastGesture.angle < 360 + PROFILE_SELECTION_ANGLE_LOW - 20) {
 					// top left: adjust dartCount
 					if (!joystickLockout) {
@@ -332,20 +306,16 @@ void __not_in_flash_func(runOperationSm)() {
 			} else if (lastGesture.type == GESTURE_HOLD && lastGesture.angle >= 260 && lastGesture.angle <= 280 && enteringJoystickLock && joystickLockTimer > 2000) {
 				joystickLockout = !joystickLockout;
 				enteringJoystickLock = false;
-#if HW_VERSION == 2
 				if (joystickLockout && MenuItem::settingsBeep) {
 					makeRtttlSound("lock:d=4,o=5,b=650:4f,4a#");
 					speakerLoopOnFastCore2 = true;
 				}
-#endif
 			} else if (lastGesture.type == GESTURE_RELEASE && enteringJoystickLock) {
 				enteringJoystickLock = false;
-#if HW_VERSION == 2
 				if (joystickLockout && MenuItem::settingsBeep) {
 					stopSound();
 					speakerLoopOnFastCore2 = false;
 				}
-#endif
 			} else if (updatingDartCount && lastGesture.type == GESTURE_RELEASE) {
 				updatingDartCount = false;
 			}
@@ -359,31 +329,21 @@ void __not_in_flash_func(runOperationSm)() {
 			retractPusher();
 		}
 		if (updatingDartCount) {
-#if HW_VERSION == 2
 			i32 lastDc = dartCount;
-#endif
 			dartCount = dcUpdateStart - joystickRotationTicks;
 			dartCount = constrain(dartCount, 0, 99);
 			if (dcUpdateStart - joystickRotationTicks < -3 * 360 / (32 - rotationTickSensitivity * 8)) {
-// 5 full rotations below 0 darts
-#if HW_VERSION == 1
-				// V1 does not have a gyro, and therefore no safe flip detection
-				operationState = STATE_SAFE;
-#elif HW_VERSION == 2
+				// 5 full rotations below 0 darts
 				updatingDartCount = false;
 				enableStandbyFlag = true;
-#endif
 			}
-#if HW_VERSION == 2
 			if (lastDc != dartCount) {
 				makeSound(1500, 8);
 				extendPusher();
 				pusherCycles = 0;
 			}
-#endif
 		}
 
-#if HW_VERSION == 2
 		if (pitch > FIX_DEG_TO_RAD * 65) {
 			safeFlipTimer = 0;
 		}
@@ -393,7 +353,6 @@ void __not_in_flash_func(runOperationSm)() {
 			safeFlipTimer = 4000;
 			DEBUG_PRINTSLN("STATE_SAFE");
 		}
-#endif
 
 		if (CHECK_IDLE_EN) {
 			pidLoop(idleRpm);
@@ -404,12 +363,10 @@ void __not_in_flash_func(runOperationSm)() {
 				sendEdtStart();
 			}
 		}
-#if HW_VERSION == 2
 		if (freeFallDetected) {
 			operationState = STATE_FALL_DETECTED;
 			break;
 		}
-#endif
 		if (triggerUpdateFlag) {
 			triggerUpdateFlag = false;
 			blasterHasFired = true;
@@ -451,9 +408,7 @@ void __not_in_flash_func(runOperationSm)() {
 		if ((rpmGood && goodTimer >= rpmInRangeTime && !escErpmFail) || (!timeoutMode && timeout)) {
 			operationState = STATE_PUSH;
 			DEBUG_PRINTSLN("STATE_PUSH");
-#if HW_VERSION == 2
 			sinceFirstPush = 0;
-#endif
 			extendPusher();
 			thisRampupDuration = (opStateTime + 500) / 1000;
 			pushCount = 0;
@@ -468,12 +423,7 @@ void __not_in_flash_func(runOperationSm)() {
 		// run PID loop to keep motors at target RPM, turn on solenoid
 		// go to retract state when trigger is released
 		pidLoop(targetRpm);
-#if HW_VERSION == 1
-		if (opStateTime >= pushDuration)
-#elif HW_VERSION == 2
-		if (autoPusherTiming ? pusherFullyExtended : (opStateTime >= pushDuration))
-#endif
-		{
+		if (autoPusherTiming ? pusherFullyExtended : (opStateTime >= pushDuration)) {
 			if (dartCount) dartCount--;
 			operationState = STATE_RETRACT;
 			dischargePusher();
@@ -486,12 +436,7 @@ void __not_in_flash_func(runOperationSm)() {
 		// go to rampdown state when trigger is released or in single shot mode
 		pidLoop(targetRpm);
 		if (opStateTime >= 3100) retractPusher();
-#if HW_VERSION == 1
-		if (opStateTime >= retractDuration)
-#elif HW_VERSION == 2
-		if (autoPusherTiming ? (pusherFullyRetracted && sinceExtend > 1000000 / dpsLimit) : (opStateTime >= retractDuration))
-#endif
-		{
+		if (autoPusherTiming ? (pusherFullyRetracted && sinceExtend > 1000000 / dpsLimit) : (opStateTime >= retractDuration)) {
 			pushCount++;
 			triggerUpdateFlag = false; // clear update flag to prevent immediate refire
 			switch (fireMode) {
@@ -501,9 +446,7 @@ void __not_in_flash_func(runOperationSm)() {
 					extendPusher();
 					DEBUG_PRINTSLN("STATE_PUSH");
 				} else {
-#if HW_VERSION == 2
 					actualDps = fix32(pushCount) / (i32)sinceFirstPush * 1000;
-#endif
 					operationState = STATE_RAMPDOWN;
 					DEBUG_PRINTSLN("STATE_RAMPDOWN");
 				}
@@ -514,9 +457,7 @@ void __not_in_flash_func(runOperationSm)() {
 					extendPusher();
 					DEBUG_PRINTSLN("STATE_PUSH");
 				} else {
-#if HW_VERSION == 2
 					actualDps = fix32(pushCount) / (i32)sinceFirstPush * 1000;
-#endif
 					operationState = STATE_RAMPDOWN;
 					DEBUG_PRINTSLN("STATE_RAMPDOWN");
 				}
@@ -569,9 +510,7 @@ void __not_in_flash_func(runOperationSm)() {
 		static bool wasReleased = false;
 		if (firstRun) {
 			wasReleased = false;
-#if HW_VERSION == 2
 			ledSetMode(LED_MODE::FADE, LIGHT_ID::HOMESCREEN, 0, 255, 0, 0);
-#endif
 		}
 		if (lastGesture.type == GESTURE_RELEASE) {
 			wasReleased = true;
@@ -582,16 +521,12 @@ void __not_in_flash_func(runOperationSm)() {
 			if (operationState == STATE_FALL_DETECTED) {
 				operationState = STATE_OFF;
 				triggerUpdateFlag = false;
-#if HW_VERSION == 2
 				freeFallDetected = false;
 				makeRtttlSound("fallReset:d=4,o=5,b=1000:d,d#,e,f,f#,g");
-#endif
 			} else if (operationState == STATE_SAFE) {
 				operationState = STATE_OFF;
 				triggerUpdateFlag = false;
-#if HW_VERSION == 2
 				makeRtttlSound("unlock:d=4,o=5,b=650:4f,4a#");
-#endif
 			}
 		}
 	} break;
@@ -654,14 +589,6 @@ void __not_in_flash_func(runOperationSm)() {
 	} else {
 		firstMotorDisable = true;
 	}
-#if HW_VERSION == 1
-	// beep when inactive, V2 has standby for this
-	static elapsedMillis lastBeacon = 0;
-	if (inactivityTimer > 1000 * 60 * inactivityTimeout && lastBeacon > 5000 && inactivityTimeout) {
-		lastBeacon = 0;
-		pushToAllCommandBufs(DSHOT_CMD_BEACON4);
-	}
-#endif
 	sendThrottles(throttles);
 	firstRun = false;
 	if (lastState != operationState) {

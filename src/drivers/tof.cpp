@@ -8,13 +8,8 @@ i32 dartCount = 0;
 
 #ifdef USE_TOF
 
-#if HW_VERSION == 1
-#define NO_MAG_THRESHOLD 65
-#define MAG_THRESHOLD 55
-#elif HW_VERSION == 2
 #define NO_MAG_THRESHOLD 55
 #define MAG_THRESHOLD 50
-#endif
 
 VL53L0X tof;
 PT1 tofDistance(3, 30);
@@ -27,10 +22,8 @@ bool magPresent = false;
 u8 magSize = 18;
 bool fireWoMag = false;
 bool fireWoDarts = false;
-#if HW_VERSION == 2
 bool beepOnMagChange = true;
 u8 tofTries = 0;
-#endif
 u8 tofState = 0; // every I2C transaction takes about 100us, so spread them out
 
 void initTof() {
@@ -82,18 +75,14 @@ void tofLoop() {
 		tofDistance.update(read);
 		if (magPresent && ((fix32)tofDistance).geti32() > tofThresHigh) {
 			magPresent = false;
-#if HW_VERSION == 2
 			if ((beepOnMagChange && tofCalibrationState == 255) || tofCalibrationState == 2)
 				makeRtttlSound("MagOut:d=4,o=4,b=160:d5-,0a");
-#endif
 			DEBUG_PRINTSLN("Magazine removed");
 			dartCount = 0;
 		} else if (!magPresent && ((fix32)tofDistance).geti32() <= tofThresLow) {
 			magPresent = true;
-#if HW_VERSION == 2
 			if ((beepOnMagChange && tofCalibrationState == 255) || tofCalibrationState == 2)
 				makeRtttlSound("MagIn:d=4,o=4,b=160:a-,0d5");
-#endif
 			DEBUG_PRINTSLN("Magazine inserted");
 			dartCount = magSize;
 		}
@@ -215,27 +204,6 @@ void drawTofCalibration(MenuItem *item) {
 		item->fullRedraw = false;
 		tft.fillScreen(ST77XX_BLACK);
 		tft.setTextColor(ST77XX_WHITE);
-#if HW_VERSION == 1
-		SET_DEFAULT_FONT;
-		printCentered("Magazine Detection", SCREEN_WIDTH / 2, 0, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-		switch (tofCalibrationState) {
-		case 0:
-			printCentered("Insert magazine and press right.", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 2, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			if (!firstBoot) {
-				printCentered("Press left to cancel", SCREEN_WIDTH / 2, 50, SCREEN_WIDTH, 1, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			}
-			break;
-		case 1:
-			printCentered("Remove magazine and press right.", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 2, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			break;
-		case 2:
-			printCentered("Test the calibration by listening to the sounds. Press left to retry, or press right to continue.", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 4, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			break;
-		case 3:
-			printCentered("Calibration failed. Press left to retry, or press right to skip and use defaults.", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 4, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			break;
-		}
-#elif HW_VERSION == 2
 		tft.setFont(&FreeSansBold12pt7b);
 		printCentered("Magazine Detection", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
 		tft.setFont(&FreeSans9pt7b);
@@ -256,7 +224,6 @@ void drawTofCalibration(MenuItem *item) {
 			printCentered("Calibration failed. Press left to retry, or press right to skip and use defaults.", SCREEN_WIDTH / 2, 55, SCREEN_WIDTH, 3, 22, ClipBehavior::PRINT_LAST_LINE_DOTS);
 			break;
 		}
-#endif
 	}
 }
 

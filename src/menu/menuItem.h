@@ -7,17 +7,11 @@ using std::vector;
 
 #define MENU_MAX_DEFAULT_DATA_SIZE 64
 
-#if HW_VERSION == 1
-#define SETTINGS_BEEP_PERIOD 250
-#define STRING_EDIT_VIEW_LENGTH 7
-#define STRING_EDIT_CHAR_WIDTH 6
-#elif HW_VERSION == 2
 #define SETTINGS_BEEP_MIN_FREQ 500
 #define SETTINGS_BEEP_MAX_FREQ 1000
 #define SETTINGS_BEEP_FREQ_RANGE (SETTINGS_BEEP_MAX_FREQ - SETTINGS_BEEP_MIN_FREQ)
 #define STRING_EDIT_VIEW_LENGTH 12
 #define STRING_EDIT_CHAR_WIDTH 8
-#endif
 
 enum class MenuItemType {
 	INFO,
@@ -255,14 +249,9 @@ public:
 	static bool settingsBeep;
 	static bool settingsAreInEeprom;
 	static bool enteredRotationNavigation;
-#if HW_VERSION == 1
-	static void scheduleBeep(i16 msSinceLast, u8 tone);
-	static void makeSettingsBeep(u8 tone);
-#elif HW_VERSION == 2
 	static void beep(u16 freq);
 	u16 getValueBeepFreq();
 	static bool settingsSolenoidClickFlag;
-#endif
 
 private:
 	static u8 lastSettingsBeepMotor;

@@ -1,6 +1,5 @@
 #include "Arduino.h"
 #include "hardware/spi.h"
-#if HW_VERSION == 2
 
 /**
  * @brief Read a register from a SPI device
@@ -35,4 +34,3 @@ int regWrite(spi_inst_t *spi, const uint cs, const u8 reg, const u8 *buf, const 
  * initializes SPI_GYRO bus with 8 bits, CPOL=0, CPHA=0, MSB first and 8MHz
  */
 void initGyroSpi();
-#endif

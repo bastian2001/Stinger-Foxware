@@ -28,11 +28,9 @@ i32 pids[BLACKBOX_SIZE][3] = {0};
 i32 rpmIndex = -1;
 u32 blackboxTimes[BLACKBOX_SIZE] = {0};
 bool blFired[BLACKBOX_SIZE] = {false};
-#if HW_VERSION == 2
 u8 solenoidPosition[BLACKBOX_SIZE] = {0};
 u16 blSolenoidCurrent[BLACKBOX_SIZE] = {0};
 i32 yAccel[BLACKBOX_SIZE] = {0};
-#endif
 #endif
 
 void resetITermSet() {
@@ -103,9 +101,7 @@ void checkPrintRpm() {
 		Serial.printf("voltage: %.2f\n", ((fix32)batVoltage).getf32());
 		Serial.println();
 		Serial.print(";RPM 1;RPM 2;RPM 3;RPM 4;Throttle 1;Throttle 2;Throttle 3;Throttle 4;P 1;I 1;D 1;Trigger");
-#if HW_VERSION == 2
 		Serial.print(";SolenoidPos;SolenoidCurr(mA);yAccel");
-#endif
 		Serial.println();
 		for (int i = 0; i < BLACKBOX_SIZE; i++) {
 			bool zero = true;
@@ -130,14 +126,12 @@ void checkPrintRpm() {
 				Serial.print(targetRpm);
 			else
 				Serial.print(0);
-#if HW_VERSION == 2
 			Serial.print(";");
 			Serial.print(targetRpm / 4 * solenoidPosition[i]);
 			Serial.print(";");
 			Serial.print(blSolenoidCurrent[i]);
 			Serial.print(";");
 			Serial.print(yAccel[i]);
-#endif
 			Serial.println();
 			if (zero) break;
 			if (i % 5 == 0) sleep_ms(3);
@@ -221,11 +215,9 @@ void pidLoop(i32 rpm) {
 				pids[rpmIndex][1] = iTerm.geti32();
 				pids[rpmIndex][2] = dTerm.geti32();
 				blackboxTimes[rpmIndex] = blackboxTimer;
-#if HW_VERSION == 2
 				solenoidPosition[rpmIndex] = pusherFullyRetracted ? 1 : 0 + (pusherFullyExtended ? 2 : 0);
 				blSolenoidCurrent[rpmIndex] = (solenoidCurrent * 1000).geti32();
 				yAccel[rpmIndex] = accelDataRaw[1];
-#endif
 			}
 		}
 #endif

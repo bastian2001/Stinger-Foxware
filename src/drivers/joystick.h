@@ -10,11 +10,7 @@ extern u8 joystickCalState;
 #define GESTURE_REPEAT_WAIT 80
 #define GESTURE_CENTER_LARGE_PCT 70
 #define GESTURE_CENTER_SMALL_PCT 40
-#if HW_VERSION == 1
-#define JOYSTICK_LPF_CUTOFF_HZ 7
-#elif HW_VERSION == 2
 #define JOYSTICK_LPF_CUTOFF_HZ 30
-#endif
 #define JOYSTICK_SCHMITT_BARRIER_DEG 7
 
 enum JoystickCalState {

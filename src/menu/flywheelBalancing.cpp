@@ -2,19 +2,11 @@
 #include "Fonts/FreeSansBold12pt7b.h"
 #include "global.h"
 
-#if HW_VERSION == 1
-#define MOTOR_SCREEN_X_1 21
-#define MOTOR_SCREEN_X_2 59
-#define MOTOR_SCREEN_Y_1 21
-#define MOTOR_SCREEN_Y_2 59
-#define MOTOR_SCREEN_RADIUS 16
-#elif HW_VERSION == 2
 #define MOTOR_SCREEN_X_1 35
 #define MOTOR_SCREEN_X_2 85
 #define MOTOR_SCREEN_Y_1 56
 #define MOTOR_SCREEN_Y_2 106
 #define MOTOR_SCREEN_RADIUS 22
-#endif
 
 i16 testingThrottlePct = 50;
 u8 activeSide = 0; // 0 = throttle setting, 1 = spinning
@@ -47,13 +39,9 @@ bool balancingLoop(MenuItem *item) {
 		tft.fillScreen(ST77XX_BLACK);
 		tft.setTextColor(ST77XX_WHITE);
 		SET_DEFAULT_FONT;
-#if HW_VERSION == 1
-		printCentered("Pull trigger to switch between throttle and spinning. Hold left to exit.", SCREEN_WIDTH * 3 / 4, 0, SCREEN_WIDTH / 2, 7, YADVANCE, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 		printCentered("Pull the trigger to switch between throttle setting and spinning. Hold left to exit.", SCREEN_WIDTH * 3 / 4, 35, SCREEN_WIDTH / 2, 5, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 		tft.setFont(&FreeSansBold12pt7b);
 		printCentered("Flywheel Tester", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
-#endif
 	}
 	if (triggerUpdateFlag) {
 		triggerUpdateFlag = false;
@@ -81,24 +69,15 @@ bool balancingLoop(MenuItem *item) {
 		if (redraw || lastSide != activeSide) {
 			drawMotorOutlines(tft.color565(150, 150, 150));
 			drawValue = true;
-#if HW_VERSION == 1
-			tft.drawRect(SCREEN_WIDTH * 3 / 4 - 16, 60, 32, 14, ST77XX_WHITE);
-#elif HW_VERSION == 2
 			tft.drawRect(SCREEN_WIDTH * 3 / 4 - 20, 114, 40, 18, ST77XX_WHITE);
-#endif
 		}
 		if (drawValue) {
 			char buf[5];
 			sprintf(buf, "%3d%%", testingThrottlePct);
 			tft.setTextColor(ST77XX_WHITE);
 			SET_DEFAULT_FONT;
-#if HW_VERSION == 1
-			tft.fillRect(SCREEN_WIDTH * 3 / 4 - 15, 61, 30, 12, ST77XX_BLACK);
-			printCentered(buf, SCREEN_WIDTH * 3 / 4, 63, 30, 1, YADVANCE, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 			tft.fillRect(SCREEN_WIDTH * 3 / 4 - 19, 115, 38, 16, ST77XX_BLACK);
 			printCentered(buf, SCREEN_WIDTH * 3 / 4, 117, 38, 1, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 		}
 	} else if (activeSide == 1) {
 		if (redraw || activeSide != lastSide) {
@@ -107,13 +86,8 @@ bool balancingLoop(MenuItem *item) {
 			sprintf(buf, "%3d%%", testingThrottlePct);
 			tft.setTextColor(ST77XX_WHITE);
 			SET_DEFAULT_FONT;
-#if HW_VERSION == 1
-			tft.fillRect(SCREEN_WIDTH * 3 / 4 - 16, 60, 32, 14, ST77XX_BLACK);
-			printCentered(buf, SCREEN_WIDTH * 3 / 4, 63, 30, 1, YADVANCE, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 			tft.fillRect(SCREEN_WIDTH * 3 / 4 - 20, 114, 40, 18, ST77XX_BLACK);
 			printCentered(buf, SCREEN_WIDTH * 3 / 4, 117, 38, 1, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 		}
 		if (gestureUpdated) {
 			gestureUpdated = false;

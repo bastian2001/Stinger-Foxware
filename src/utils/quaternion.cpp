@@ -11,8 +11,6 @@
 // WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-#if HW_VERSION == 2
-
 #include "global.h"
 #include <math.h>
 void Quaternion_set(f32 w, f32 v1, f32 v2, f32 v3, Quaternion *output) {
@@ -191,4 +189,3 @@ void Quaternion_conjugate(Quaternion *q, Quaternion *output) {
 	output->v[1] = -q->v[1];
 	output->v[2] = -q->v[2];
 }
-#endif

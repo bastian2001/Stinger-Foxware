@@ -1,5 +1,4 @@
 #pragma once
-#if HW_VERSION == 2
 
 #include "utils/typedefs.h"
 #include <Arduino.h>
@@ -99,5 +98,3 @@ void gyroGetData(i32 *buf);
 
 /// @brief checks for new gyro data, sets off the read and PID tasks
 void gyroLoop();
-
-#endif

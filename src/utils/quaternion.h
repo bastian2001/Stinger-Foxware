@@ -19,7 +19,6 @@
  */
 #pragma once
 #include "fixedPointInt.h"
-#if HW_VERSION == 2
 
 /**
  * Data structure to hold a quaternion.
@@ -112,4 +111,3 @@ void Quaternion_conjugate(Quaternion *q, Quaternion *output);
 extern const f32 QUATERNION_EPS;
 extern const f32 ONE_MINUS_EPS;
 void Vector_cross(const f32 v1[3], const f32 v2[3], f32 output[3]);
-#endif

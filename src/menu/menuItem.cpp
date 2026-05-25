@@ -8,9 +8,7 @@ elapsedMillis MenuItem::lastSettingsBeepTimer = 0;
 u8 MenuItem::scheduledBeepTone = 0;
 bool MenuItem::enteredRotationNavigation = false;
 i16 MenuItem::lastTickCount = 0;
-#if HW_VERSION == 2
 bool MenuItem::settingsSolenoidClickFlag = false;
-#endif
 
 MenuItem::MenuItem(const VariableType varType, void *data, const i32 defaultVal, const i32 stepSize, const i32 min, const i32 max, const i32 displayDivider, const u8 displayDecimals, const u32 eepromPos, const bool isProfileDependent, const char *identifier, const char *displayName, const char *description, const i32 offset, const bool rebootOnChange, bool rollover)
 	: varType(varType),
@@ -344,14 +342,6 @@ void MenuItem::loop() {
 	}
 	bool deepestMenuItem = true;
 	bool deepestFullDraw = true;
-#if HW_VERSION == 1
-	if (scheduledSettingsBeep && millis() >= scheduledSettingsBeep) {
-		if (scheduledSettingsBeep + 300 > millis())
-			makeSettingsBeep(scheduledBeepTone);
-		scheduledSettingsBeep = 0;
-	}
-#elif HW_VERSION == 2
-#endif
 	switch (this->itemType) {
 	case MenuItemType::SUBMENU: {
 		if (!this->entered) return;
@@ -376,10 +366,8 @@ void MenuItem::loop() {
 	if (deepestMenuItem) {
 		if (enteredRotationNavigation) {
 			if (lastTickCount != joystickRotationTicks && joystickMagnitude >= 85) {
-// joystickMagnitude needed to prevent updates while letting the joystick snap back to center
-#if HW_VERSION == 2
+				// joystickMagnitude needed to prevent updates while letting the joystick snap back to center
 				if (settingsBeep) settingsSolenoidClickFlag = true;
-#endif
 				if (lastTickCount > joystickRotationTicks) {
 					for (i32 i = lastTickCount - joystickRotationTicks; i > 0; i--) {
 						this->onUp();
@@ -421,21 +409,13 @@ void MenuItem::loop() {
 						}
 					}
 					if (focusedChild && focusedChild->itemType == MenuItemType::VARIABLE && focusedChild->varType != VariableType::BOOL && focusedChild->varType != VariableType::STRING && focusedChild->varType != VariableType::NONE) {
-#if HW_VERSION == 1
-						scheduleBeep(SETTINGS_BEEP_PERIOD, 1);
-#elif HW_VERSION == 2
 						beep(SETTINGS_BEEP_MIN_FREQ + SETTINGS_BEEP_FREQ_RANGE / 3);
-#endif
 						enteredRotationNavigation = true;
 						lastTickCount = 0;
 						focusedChild->onEnter();
 					}
 				} else if (this->itemType == MenuItemType::VARIABLE && this->varType != VariableType::BOOL && this->varType != VariableType::STRING && this->varType != VariableType::NONE) {
-#if HW_VERSION == 1
-					scheduleBeep(SETTINGS_BEEP_PERIOD, 1);
-#elif HW_VERSION == 2
 					beep(SETTINGS_BEEP_MIN_FREQ + SETTINGS_BEEP_FREQ_RANGE / 3);
-#endif
 					enteredRotationNavigation = true;
 					lastTickCount = 0;
 				}
@@ -525,11 +505,7 @@ void MenuItem::triggerRedrawValue() {
 
 void MenuItem::drawNumberValue(const i16 cY, u16 colorBg, u16 colorFg, u8 drawBg) {
 	if (drawBg) {
-#if HW_VERSION == 1
-		tft.fillRect(MENU_START_VALUE_X, cY, 42, YADVANCE, colorBg);
-#elif HW_VERSION == 2
 		tft.fillRect(MENU_START_VALUE_X, cY, 80, YADVANCE, colorBg);
-#endif
 	}
 	tft.setCursor(MENU_START_VALUE_X, cY);
 	char buf[8];
@@ -541,29 +517,16 @@ void MenuItem::drawNumberValue(const i16 cY, u16 colorBg, u16 colorFg, u8 drawBg
 void MenuItem::drawBoolValue(const i16 cY, u16 colorBg, u16 colorFg, u8 drawBg) {
 	tft.setCursor(MENU_START_VALUE_X, cY);
 	if (drawBg)
-#if HW_VERSION == 1
-		tft.fillRect(MENU_START_VALUE_X, cY, 18, YADVANCE, colorBg);
-#elif HW_VERSION == 2
 		tft.fillRect(MENU_START_VALUE_X, cY, 19, YADVANCE, colorBg);
-#endif
 	tft.setTextColor(colorFg);
 	tft.print(*(bool *)this->data ? "ON" : "OFF");
 	tft.setTextColor(ST77XX_WHITE);
 }
 void MenuItem::drawStringValue(const i16 cY, u16 colorBg, u16 colorFg, u8 drawBg) {
 	if (drawBg) {
-#if HW_VERSION == 1
-		tft.fillRect(109, cY, 42, 8, colorBg);
-#elif HW_VERSION == 2
 		tft.fillRect(MENU_START_VALUE_X, cY, 100, YADVANCE, colorBg);
-#endif
 	}
 	tft.setCursor(MENU_START_VALUE_X, cY);
-#if HW_VERSION == 1
-	char buf[8];
-	memcpy(buf, this->data, MIN(this->maxStringLength, 8));
-	buf[7] = '\0';
-#elif HW_VERSION == 2
 	char buf[32] = {0};
 	u8 len = 0;
 	i16 x = 0, y = 0;
@@ -575,37 +538,15 @@ void MenuItem::drawStringValue(const i16 cY, u16 colorBg, u16 colorFg, u8 drawBg
 		tft.getTextBounds(buf, 0, 0, &x, &y, &width, &height);
 	}
 	buf[len - 1] = '\0';
-#endif
 	tft.setTextColor(colorFg);
 	tft.print(buf);
 	tft.setTextColor(ST77XX_WHITE);
 }
 void MenuItem::drawLutValue(const i16 cY, u16 colorBg, u16 colorFg, u8 drawBg) {
 	if (drawBg) {
-#if HW_VERSION == 1
-		u8 maxLen = 0;
-		for (u8 i = 0; i <= this->maxI; i++) {
-			maxLen = MAX(maxLen, strlen(&this->lut[i * this->lutStringSize]));
-		}
-		if (maxLen < 8) {
-			tft.fillRect(MENU_START_VALUE_X, cY, 42, YADVANCE, colorBg);
-		} else {
-			tft.fillRect(MENU_START_VALUE_X + 6 * 8 - maxLen * 6, cY, maxLen * 6, YADVANCE, colorBg);
-		}
-#elif HW_VERSION == 2
 		tft.fillRect(MENU_START_VALUE_X, cY, 90, YADVANCE, colorBg);
-#endif
 	}
-#if HW_VERSION == 1
-	u8 len = strlen(&this->lut[*(u8 *)this->data * this->lutStringSize]);
-	if (len < 8) {
-		tft.setCursor(MENU_START_VALUE_X, cY);
-	} else {
-		tft.setCursor(MENU_START_VALUE_X + 6 * 8 - len * 6, cY); // Fire Mode: Continuous
-	}
-#elif HW_VERSION == 2
 	tft.setCursor(MENU_START_VALUE_X, cY);
-#endif
 	tft.setTextColor(colorFg);
 	tft.print(&this->lut[*(u8 *)this->data * this->lutStringSize]);
 	tft.setTextColor(ST77XX_WHITE);
@@ -627,11 +568,6 @@ void MenuItem::drawEditableString(const i16 cY) {
 	memcpy(buf, ((char *)this->data) + this->charDisplayStart, MIN(this->maxStringLength, STRING_EDIT_VIEW_LENGTH));
 	buf[STRING_EDIT_VIEW_LENGTH] = '\0';
 	tft.setTextColor(tft.color565(150, 150, 150));
-#if HW_VERSION == 1
-	tft.fillRect(MENU_START_VALUE_X, cY, 42, 8, ST77XX_BLACK);
-	tft.setCursor(MENU_START_VALUE_X, cY);
-	tft.print(buf);
-#elif HW_VERSION == 2
 	tft.fillRect(MENU_START_VALUE_X, cY, 100, YADVANCE, ST77XX_BLACK);
 	int cX = MENU_START_VALUE_X;
 	// Bass11px is not monospace, so we have to print char by char
@@ -640,7 +576,6 @@ void MenuItem::drawEditableString(const i16 cY) {
 		tft.print(buf[i]);
 		cX += STRING_EDIT_CHAR_WIDTH;
 	}
-#endif
 	u8 nullSearchBoundHigh = STRING_EDIT_VIEW_LENGTH - 1;
 	u8 nullSearchBoundLow = 0;
 	if (this->charDisplayStart != 0) {
@@ -662,22 +597,14 @@ void MenuItem::drawEditableString(const i16 cY) {
 		tft.setCursor(posX, cY);
 		tft.print(c);
 	} else {
-#if HW_VERSION == 1
-		tft.fillRect(posX + 1, cY + 2, 4, 4, tft.color565(255, 0, 0));
-#elif HW_VERSION == 2
 		tft.fillRect(posX + 2, cY + 2, 6, 6, tft.color565(255, 0, 0));
-#endif
 	}
 	for (u8 i = nullSearchBoundLow; i <= nullSearchBoundHigh; i++) {
 		char c = ((char *)this->data)[this->charDisplayStart + i];
 		if (!c) {
 			if (this->charPos == this->charDisplayStart + i)
 				break;
-#if HW_VERSION == 1
-			tft.fillRect(MENU_START_VALUE_X + i * STRING_EDIT_CHAR_WIDTH + 2, cY + 3, 2, 2, tft.color565(150, 0, 0));
-#elif HW_VERSION == 2
 			tft.fillRect(MENU_START_VALUE_X + i * STRING_EDIT_CHAR_WIDTH + 3, cY + 3, 4, 4, tft.color565(150, 0, 0));
-#endif
 			break;
 		}
 	}
@@ -726,11 +653,7 @@ void MenuItem::drawEntry(bool fullRedraw) {
 	// Draw profile / standard color indicator
 	u16 thisColor = this->isProfileDependent ? profileColor565 : ST77XX_WHITE;
 	if ((this->lastProfileColor565 != thisColor || fullRedraw) && this->itemType == MenuItemType::VARIABLE) {
-#if HW_VERSION == 1
-		tft.fillRect(154, cY + 1, 6, 6, thisColor);
-#elif HW_VERSION == 2
 		tft.fillRect(234, cY + 3, 6, 6, thisColor);
-#endif
 		this->lastProfileColor565 = thisColor;
 	}
 
@@ -743,11 +666,7 @@ void MenuItem::drawEntry(bool fullRedraw) {
 
 	if (thisDrawType == DRAW_UNFOCUSED && lastEntryDrawType != DRAW_UNFOCUSED) {
 		// remove arrow
-#if HW_VERSION == 1
-		tft.fillRect(0, cY, 6, YADVANCE, ST77XX_BLACK);
-#elif HW_VERSION == 2
 		tft.fillRect(0, cY, 8, YADVANCE, ST77XX_BLACK);
-#endif
 	}
 	if (thisDrawType != DRAW_UNFOCUSED && (lastEntryDrawType == DRAW_UNFOCUSED || fullRedraw)) {
 		// add arrow to show focus
@@ -912,29 +831,6 @@ void MenuItem::checkFocus() {
 	}
 }
 
-#if HW_VERSION == 1
-void MenuItem::scheduleBeep(i16 msSinceLast, u8 tone) {
-	if (!settingsBeep) return;
-	u32 settingsBeepAt = millis();
-	if (msSinceLast <= 0 || msSinceLast < lastSettingsBeepTimer) {
-		scheduledSettingsBeep = settingsBeepAt;
-		scheduledBeepTone = tone;
-		return;
-	}
-	settingsBeepAt += msSinceLast - lastSettingsBeepTimer;
-	if (settingsBeepAt < scheduledSettingsBeep || !scheduledSettingsBeep) {
-		scheduledSettingsBeep = settingsBeepAt;
-		scheduledBeepTone = tone;
-	}
-}
-
-void MenuItem::makeSettingsBeep(u8 tone) {
-	lastSettingsBeepMotor++;
-	lastSettingsBeepMotor %= 4;
-	escCommandBuffer[lastSettingsBeepMotor].push(DSHOT_CMD_BEACON1 + tone);
-	lastSettingsBeepTimer = 0;
-}
-#elif HW_VERSION == 2
 void MenuItem::beep(u16 freq) {
 	if (!settingsBeep) return;
 	makeSound(freq, enteredRotationNavigation ? 25 : GESTURE_REPEAT_WAIT / 2);
@@ -967,7 +863,6 @@ u16 MenuItem::getValueBeepFreq() {
 	}
 	return 0;
 }
-#endif
 
 void MenuItem::onExit() {
 	DEBUG_PRINTF("Exiting %s\n", this->identifier);
@@ -995,9 +890,6 @@ void MenuItem::onUp() {
 	if (this->onUpFunction != nullptr) {
 		if (!this->onUpFunction(this)) return;
 	}
-#if HW_VERSION == 1
-	scheduleBeep(SETTINGS_BEEP_PERIOD, 3);
-#endif
 	switch (this->itemType) {
 	case MenuItemType::VARIABLE: {
 		this->rebootRequired = this->rebootOnChange;
@@ -1021,9 +913,7 @@ void MenuItem::onUp() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::U32: {
 			u32 &val = *(u32 *)this->data;
@@ -1044,9 +934,7 @@ void MenuItem::onUp() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::FLOAT: {
 			float &val = *(float *)this->data;
@@ -1066,9 +954,7 @@ void MenuItem::onUp() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::U16: {
 			u16 &val = *(u16 *)this->data;
@@ -1089,9 +975,7 @@ void MenuItem::onUp() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::I16: {
 			i16 &val = *(i16 *)this->data;
@@ -1112,9 +996,7 @@ void MenuItem::onUp() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::U8:
 		case VariableType::U8_LUT: {
@@ -1136,9 +1018,7 @@ void MenuItem::onUp() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::I8: {
 			i8 &val = *(i8 *)this->data;
@@ -1159,9 +1039,7 @@ void MenuItem::onUp() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::STRING: {
 			char &c = ((char *)this->data)[charPos];
@@ -1226,9 +1104,7 @@ void MenuItem::onUp() {
 			default:
 				c++;
 			}
-#if HW_VERSION == 2
 			beep(SETTINGS_BEEP_MAX_FREQ);
-#endif
 		} break;
 		}
 		if (this->onChangeFunction != nullptr) {
@@ -1252,15 +1128,11 @@ void MenuItem::onUp() {
 				break;
 			}
 		}
-#if HW_VERSION == 2
 		beep(SETTINGS_BEEP_MAX_FREQ);
-#endif
 	} break;
-#if HW_VERSION == 2
 	default:
 		beep(SETTINGS_BEEP_MAX_FREQ);
 		break;
-#endif
 	}
 }
 
@@ -1268,9 +1140,6 @@ void MenuItem::onDown() {
 	if (this->onDownFunction != nullptr) {
 		if (!this->onDownFunction(this)) return;
 	}
-#if HW_VERSION == 1
-	scheduleBeep(SETTINGS_BEEP_PERIOD, 0);
-#endif
 	switch (this->itemType) {
 	case MenuItemType::VARIABLE: {
 		this->rebootRequired = this->rebootOnChange;
@@ -1294,9 +1163,7 @@ void MenuItem::onDown() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::U32: {
 			u32 &val = *(u32 *)this->data;
@@ -1317,9 +1184,7 @@ void MenuItem::onDown() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::FLOAT: {
 			float &val = *(float *)this->data;
@@ -1339,9 +1204,7 @@ void MenuItem::onDown() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::U16: {
 			u16 &val = *(u16 *)this->data;
@@ -1361,9 +1224,7 @@ void MenuItem::onDown() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::I16: {
 			i16 &val = *(i16 *)this->data;
@@ -1384,9 +1245,7 @@ void MenuItem::onDown() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::U8:
 		case VariableType::U8_LUT: {
@@ -1408,9 +1267,7 @@ void MenuItem::onDown() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::I8: {
 			i8 &val = *(i8 *)this->data;
@@ -1431,9 +1288,7 @@ void MenuItem::onDown() {
 					}
 				}
 			}
-#if HW_VERSION == 2
 			beep(getValueBeepFreq());
-#endif
 		} break;
 		case VariableType::STRING: {
 			char &c = ((char *)this->data)[charPos];
@@ -1498,9 +1353,7 @@ void MenuItem::onDown() {
 			default:
 				c--;
 			}
-#if HW_VERSION == 2
 			beep(SETTINGS_BEEP_MIN_FREQ);
-#endif
 		} break;
 		}
 		if (this->onChangeFunction != nullptr) {
@@ -1524,15 +1377,11 @@ void MenuItem::onDown() {
 				break;
 			}
 		}
-#if HW_VERSION == 2
 		beep(SETTINGS_BEEP_MIN_FREQ);
-#endif
 	} break;
-#if HW_VERSION == 2
 	default:
 		beep(SETTINGS_BEEP_MIN_FREQ);
 		break;
-#endif
 	}
 }
 
@@ -1543,17 +1392,9 @@ void MenuItem::onLeft() {
 	if (this->itemType == MenuItemType::VARIABLE && this->varType == VariableType::STRING) redrawValue = true;
 	if (this->itemType == MenuItemType::VARIABLE && this->varType == VariableType::STRING && this->charPos > 0) {
 		this->charPos--;
-#if HW_VERSION == 1
-		scheduleBeep(0, 1);
-#elif HW_VERSION == 2
 		beep(SETTINGS_BEEP_MIN_FREQ + SETTINGS_BEEP_FREQ_RANGE / 3);
-#endif
 	} else if (lastGesture.type == GESTURE_PRESS) {
-#if HW_VERSION == 1
-		scheduleBeep(0, 1);
-#elif HW_VERSION == 2
 		beep(SETTINGS_BEEP_MIN_FREQ + SETTINGS_BEEP_FREQ_RANGE / 3);
-#endif
 		this->onExit();
 	}
 }
@@ -1566,11 +1407,7 @@ void MenuItem::onRight() {
 	case MenuItemType::VARIABLE:
 		if (this->varType == VariableType::STRING) {
 			redrawValue = true;
-#if HW_VERSION == 1
-			scheduleBeep(SETTINGS_BEEP_PERIOD, 1);
-#elif HW_VERSION == 2
 			beep(SETTINGS_BEEP_MIN_FREQ + SETTINGS_BEEP_FREQ_RANGE / 3);
-#endif
 		}
 		if (this->varType == VariableType::STRING && this->charPos < strlen((char *)this->data) && this->charPos < this->maxStringLength - 2)
 			this->charPos++;
@@ -1579,11 +1416,7 @@ void MenuItem::onRight() {
 		break;
 	case MenuItemType::SUBMENU:
 		if (lastGesture.type == GESTURE_PRESS) {
-#if HW_VERSION == 1
-			scheduleBeep(SETTINGS_BEEP_PERIOD, 1);
-#elif HW_VERSION == 2
 			beep(SETTINGS_BEEP_MIN_FREQ + SETTINGS_BEEP_FREQ_RANGE / 3);
-#endif
 			for (u8 i = 0; i < this->children.size(); i++) {
 				if (this->children[i]->focused) {
 					this->children[i]->onEnter();
@@ -1593,23 +1426,15 @@ void MenuItem::onRight() {
 		}
 		break;
 	default:
-#if HW_VERSION == 1
-		scheduleBeep(SETTINGS_BEEP_PERIOD, 1);
-#elif HW_VERSION == 2
 		beep(SETTINGS_BEEP_MIN_FREQ + SETTINGS_BEEP_FREQ_RANGE / 3);
-#endif
 	}
 }
 
 void MenuItem::drawFull() {
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = true;
-#endif
 	if (this->customDrawFull != nullptr) {
 		this->customDrawFull(this);
-#if HW_VERSION == 2
 		speakerLoopOnFastCore = false;
-#endif
 		return;
 	}
 	if (this->itemType != MenuItemType::SUBMENU) return;
@@ -1620,7 +1445,5 @@ void MenuItem::drawFull() {
 		this->children[i]->drawEntry(fullRedraw);
 	}
 	fullRedraw = false;
-#if HW_VERSION == 2
 	speakerLoopOnFastCore = false;
-#endif
 }

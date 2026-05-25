@@ -1,5 +1,4 @@
 #include "global.h"
-#if HW_VERSION == 2
 #define IMU_RATE (PID_RATE / 2)
 
 // COORDINATE SYSTEM:
@@ -180,4 +179,3 @@ void __not_in_flash_func(freeFallDetection)() {
 		}
 	}
 }
-#endif

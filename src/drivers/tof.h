@@ -12,9 +12,7 @@ extern u8 magSize;
 extern bool fireWoMag;
 extern bool fireWoDarts;
 extern PT1 tofDistance;
-#if HW_VERSION == 2
 extern bool beepOnMagChange;
-#endif
 extern bool foundTof;
 void initTof();
 void tofLoop();

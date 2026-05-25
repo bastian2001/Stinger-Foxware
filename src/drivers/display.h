@@ -9,16 +9,6 @@ enum class ClipBehavior {
 	PRINT_LAST_LINE_LEFT,
 	DONT_PRINT
 };
-#if HW_VERSION == 1
-extern Adafruit_ST7735 tft;
-#define YADVANCE 8
-#define YADVANCE_RELAXED 10
-#define MAX_SCREEN_LINES 10
-#define SCREEN_WIDTH 160
-#define SCREEN_HEIGHT 80
-#define SET_DEFAULT_FONT tft.setFont()
-#define MENU_START_VALUE_X 109
-#elif HW_VERSION == 2
 extern Adafruit_ST7789 tft;
 #define YADVANCE 12
 #define YADVANCE_RELAXED 15
@@ -27,7 +17,6 @@ extern Adafruit_ST7789 tft;
 #define SCREEN_HEIGHT 135
 #define SET_DEFAULT_FONT tft.setFont(&Bass12px)
 #define MENU_START_VALUE_X 130
-#endif
 void initDisplay();
 void triggerFullRedraw();
 void displayLoop();

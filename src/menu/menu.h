@@ -2,7 +2,7 @@
 #include "menuItem.h"
 #include "utils/typedefs.h"
 
-#define DEFAULT_MAX_RPM (HW_VERSION == 2 ? 53000 : 60000)
+#define DEFAULT_MAX_RPM 53000
 
 extern MenuItem *mainMenu;
 extern MenuItem *firstBootMenu;

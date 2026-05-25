@@ -1,7 +1,5 @@
 #include "global.h"
 
-#if HW_VERSION == 2
-
 bool standbyOn = false;
 bool enableStandbyFlag = false;
 bool fastStandbyEnabled = true;
@@ -131,13 +129,10 @@ void disableStandby() {
 	joystickLockout = false;
 	triggerFullRedraw();
 	forceInitBat = true;
-#if HW_VERSION == 2
 	releaseLightId(LIGHT_ID::STANDBY);
-#endif
 	inactivityTimer = 0;
 	noMotionTimer = 0;
 	bootTimer = 0;
 	if (operationState == STATE_OFF) forceNewOpState = STATE_SAFE;
 	standbyOn = false;
 }
-#endif

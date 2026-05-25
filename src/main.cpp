@@ -13,11 +13,9 @@ void setup() {
 	rebootReason = BootReason::WATCHDOG;
 	Serial.begin(115200);
 	DEBUG_PRINTSLN("start");
-#if HW_VERSION == 2
 	initStandbySwitch();
 	initSpeaker();
 	ledInit();
-#endif
 	initAnalog();
 	if (bootReason == BootReason::TO_ESC_PASSTHROUGH) {
 		initDisplay();
@@ -28,12 +26,7 @@ void setup() {
 		tft.fillScreen(ST77XX_BLACK);
 		tft.setTextColor(ST77XX_WHITE);
 		printCentered("ESC Passthrough", SCREEN_WIDTH / 2, 15, SCREEN_WIDTH, 1, 22, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-		SET_DEFAULT_FONT;
-#if HW_VERSION == 1
-		printCentered("Use BLHeliSuite32 to configure ESCs. Click disconnect or hold the trigger for 3 sec to boot into normal mode again.", SCREEN_WIDTH / 2, 30, SCREEN_WIDTH, 5, YADVANCE, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 		printCentered("Use AM32 Configurator to configure ESCs. Click disconnect or hold the trigger for 3 seconds to boot into normal mode again.", SCREEN_WIDTH / 2, 40, SCREEN_WIDTH, 5, YADVANCE_RELAXED, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 		elapsedMillis triggerTimer = 0;
 		elapsedMillis batteryTimer = 2000;
 		while (processPassthrough()) {
@@ -78,11 +71,9 @@ void setup() {
 	initESCs(); // ESCs must be initiated after the display to avoid pin conflicts
 	initBat();
 	tournamentInit();
-#if HW_VERSION == 2
 	initGyroSpi();
 	gyroInit();
 	imuInit();
-#endif
 	setupDone |= 0b01;
 	while (setupDone != 0b11) {
 		bootTimer = 0;
@@ -90,9 +81,7 @@ void setup() {
 	}
 	bootTimer = 0;
 	DEBUG_PRINTSLN("Setup done");
-#if HW_VERSION == 2
 	playStartupSound();
-#endif
 }
 
 /**
@@ -104,17 +93,11 @@ void loop() {
 	tofLoop();
 #endif
 	batLoop();
-#if HW_VERSION == 2
 	if (!speakerLoopOnFastCore && !speakerLoopOnFastCore2)
 		speakerLoop();
 	ledLoop();
-#endif
 	displayLoop();
-	if (openedMenu != nullptr && operationState == STATE_MENU
-#if HW_VERSION == 2
-		&& !standbyOn
-#endif
-	) {
+	if (openedMenu != nullptr && operationState == STATE_MENU && !standbyOn) {
 		openedMenu->loop();
 	}
 	tournamentLoop();
@@ -133,9 +116,7 @@ void setup1() {
 }
 
 elapsedMicros pidCycleTimer = 0;
-#if HW_VERSION == 2
 bool gyroCycle = true;
-#endif
 
 /**
  * @brief time critical loop
@@ -146,19 +127,16 @@ void loop1() {
 	if (pidCycleTimer >= 1000000 / PID_RATE) {
 		pidCycleTimer -= 1000000 / PID_RATE;
 		if (pidCycleTimer > 3000) pidCycleTimer = 3000; // maximum time to catch up is 3ms
-#if HW_VERSION == 2
 		if (standbyOn) {
 			standbyOnLoop();
 			return;
 		}
-#endif
 		decodeErpm();
 		adc_run(false);
 		checkTelemetry();
 		runOperationSm();
 		analogLoop();
 		joystickLoop();
-#if HW_VERSION == 2
 		pusherLoop();
 		batCurrLoop();
 		if (gyroCycle) {
@@ -210,6 +188,5 @@ void loop1() {
 			}
 		}
 #endif // ENABLE_DEBUG_GYRO
-#endif // HW_VERSION == 2
 	}
 }

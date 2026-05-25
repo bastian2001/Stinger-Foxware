@@ -239,9 +239,7 @@ void joystickLoop() {
 bool calJoystick(MenuItem *item) {
 	if (joystickCalibrationTimer > 20000 && item != nullptr) {
 		joystickCalState = JOYSTICK_CAL_ABORT;
-#if HW_VERSION == 2
 		ledSetMode(LED_MODE::OFF, LIGHT_ID::MENU);
-#endif
 		joystickCalibrationTimer = 0;
 	};
 	switch (joystickCalState) {
@@ -309,14 +307,12 @@ bool calJoystick(MenuItem *item) {
 			if (rawX > joystickCalXNew[2]) joystickCalXNew[2] = rawX;
 			if (rawY < joystickCalYNew[1]) joystickCalYNew[1] = rawY;
 			if (rawY > joystickCalYNew[2]) joystickCalYNew[2] = rawY;
-#if HW_VERSION == 2
 			u8 r, g, b;
 			i32 m = joystickMagnitude - 20;
 			if (m < 0) m = 0;
 			m = m * 128 / 80;
 			hslToRgb(255 * joystickAngleDeg / 360, 255, m, r, g, b);
 			ledSetMode(LED_MODE::STATIC, LIGHT_ID::MENU, 0, r, g, b);
-#endif
 		}
 		break;
 	case JOYSTICK_CAL_CONFIRM: {
@@ -333,21 +329,17 @@ bool calJoystick(MenuItem *item) {
 			joystickCalibrationTimer = 0;
 			triggerUpdateFlag = false;
 		}
-#if HW_VERSION == 2
 		u8 r, g, b;
 		i32 m = joystickMagnitude - 20;
 		if (m < 0) m = 0;
 		m = m * 128 / 80;
 		hslToRgb(255 * joystickAngleDeg / 360, 255, m, r, g, b);
 		ledSetMode(LED_MODE::STATIC, LIGHT_ID::MENU, 0, r, g, b);
-#endif
 	} break;
 	case JOYSTICK_CAL_DONE:
 		// joystick calibration done
 		if (item == nullptr) {
-#if HW_VERSION == 2
 			releaseLightId(LIGHT_ID::MENU);
-#endif
 			if (firstBoot) {
 				MenuItem *remap = mainMenu->search("remapMotors");
 				if (remap != nullptr) {
@@ -393,72 +385,44 @@ void drawJoystickCalibration(MenuItem *item) {
 		if (firstTime) {
 			tft.fillScreen(ST77XX_BLACK);
 			tft.setTextColor(ST77XX_WHITE);
-#if HW_VERSION == 1
-			SET_DEFAULT_FONT;
-			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 0, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
-			printCentered("Move the joystick up and let it snap back to the center.", SCREEN_WIDTH / 2, 12, SCREEN_WIDTH, 4, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			printCentered("Pull the trigger to continue.", SCREEN_WIDTH / 2, 52, SCREEN_WIDTH, 2, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 			tft.setFont(&FreeSansBold12pt7b);
 			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
 			tft.setFont(&FreeSans9pt7b);
 			printCentered("Move the joystick up and let it snap back to the center.", SCREEN_WIDTH / 2, 57, SCREEN_WIDTH, 4, 22, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			printCentered("Pull the trigger to continue.", SCREEN_WIDTH / 2, 120, SCREEN_WIDTH, 2, 18, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 		}
 		break;
 	case JOYSTICK_CAL_CENTER_BOTTOM:
 		if (firstTime) {
 			tft.fillScreen(ST77XX_BLACK);
 			tft.setTextColor(ST77XX_WHITE);
-#if HW_VERSION == 1
-			SET_DEFAULT_FONT;
-			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 0, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
-			printCentered("Move the joystick down and let it snap back to the center.", SCREEN_WIDTH / 2, 12, SCREEN_WIDTH, 4, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			printCentered("Pull the trigger to continue.", SCREEN_WIDTH / 2, 52, SCREEN_WIDTH, 2, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 			tft.setFont(&FreeSansBold12pt7b);
 			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
 			tft.setFont(&FreeSans9pt7b);
 			printCentered("Move the joystick down and let it snap back to the center.", SCREEN_WIDTH / 2, 57, SCREEN_WIDTH, 4, 22, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			printCentered("Pull the trigger to continue.", SCREEN_WIDTH / 2, 120, SCREEN_WIDTH, 2, 18, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 		}
 		break;
 	case JOYSTICK_CAL_CENTER_LEFT:
 		if (firstTime) {
 			tft.fillScreen(ST77XX_BLACK);
 			tft.setTextColor(ST77XX_WHITE);
-#if HW_VERSION == 1
-			SET_DEFAULT_FONT;
-			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 0, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
-			printCentered("Move the joystick left and let it snap back to the center.", SCREEN_WIDTH / 2, 12, SCREEN_WIDTH, 4, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			printCentered("Pull the trigger to continue.", SCREEN_WIDTH / 2, 52, SCREEN_WIDTH, 2, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 			tft.setFont(&FreeSansBold12pt7b);
 			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
 			tft.setFont(&FreeSans9pt7b);
 			printCentered("Move the joystick left and let it snap back to the center.", SCREEN_WIDTH / 2, 57, SCREEN_WIDTH, 4, 22, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			printCentered("Pull the trigger to continue.", SCREEN_WIDTH / 2, 120, SCREEN_WIDTH, 2, 18, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 		}
 		break;
 	case JOYSTICK_CAL_CENTER_RIGHT:
 		if (firstTime) {
 			tft.fillScreen(ST77XX_BLACK);
 			tft.setTextColor(ST77XX_WHITE);
-#if HW_VERSION == 1
-			SET_DEFAULT_FONT;
-			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 0, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
-			printCentered("Move the joystick right and let it snap back to the center.", SCREEN_WIDTH / 2, 12, SCREEN_WIDTH, 4, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			printCentered("Pull the trigger to continue.", SCREEN_WIDTH / 2, 52, SCREEN_WIDTH, 2, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 			tft.setFont(&FreeSansBold12pt7b);
 			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
 			tft.setFont(&FreeSans9pt7b);
 			printCentered("Move the joystick right and let it snap back to the center.", SCREEN_WIDTH / 2, 57, SCREEN_WIDTH, 4, 22, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			printCentered("Pull the trigger to continue.", SCREEN_WIDTH / 2, 120, SCREEN_WIDTH, 2, 18, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 		}
 		break;
 	case JOYSTICK_CAL_LIMITS: {
@@ -467,32 +431,14 @@ void drawJoystickCalibration(MenuItem *item) {
 		if (firstTime) {
 			tft.fillScreen(ST77XX_BLACK);
 			tft.setTextColor(ST77XX_WHITE);
-#if HW_VERSION == 1
-			SET_DEFAULT_FONT;
-			printCentered("Circulate the joystick gently to find the min and max values.", SCREEN_WIDTH * 3 / 8, 3, SCREEN_WIDTH * 3 / 4, 6, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			printCentered("Pull the trigger to continue", SCREEN_WIDTH * 3 / 8, 60, 120, 2, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 			tft.setFont(&FreeSansBold12pt7b);
 			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
 			tft.setFont(&FreeSans9pt7b);
 			printCentered("Circulate the joystick gently to find the min and max values.", SCREEN_WIDTH / 2, 44, SCREEN_WIDTH, 6, 19, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			printCentered("Pull the trigger to continue", SCREEN_WIDTH / 4, 95, SCREEN_WIDTH / 2, 2, 19, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 		}
 		if (updateTimer >= 17) {
 			updateTimer = 0;
-#if HW_VERSION == 1
-			// X: 140 +- 15, Y: 40 +- 15
-			u8 newX = 140 - (joystickMagnitude * 15 / 100) * cosf(joystickAngle.getf32()) + .5f;
-			u8 newY = 40 + (joystickMagnitude * 15 / 100) * sinf(joystickAngle.getf32()) + .5f;
-			if (newX != lastX || newY != lastY) {
-				tft.fillCircle(lastX, lastY, 2, ST77XX_BLACK);
-				tft.fillCircle(newX, newY, 2, ST77XX_WHITE);
-				tft.drawCircle(140, 40, 15, tft.color565(192, 192, 192));
-				lastX = newX;
-				lastY = newY;
-			}
-#elif HW_VERSION == 2
 			// X: 180 +- 29, Y: 101 +- 29
 			u8 newX = 180 - (joystickMagnitude * 29 / 100) * cosf(joystickAngle.getf32()) + .5f;
 			u8 newY = 101 + (joystickMagnitude * 29 / 100) * sinf(joystickAngle.getf32()) + .5f;
@@ -503,7 +449,6 @@ void drawJoystickCalibration(MenuItem *item) {
 				lastX = newX;
 				lastY = newY;
 			}
-#endif
 		}
 	} break;
 	case JOYSTICK_CAL_CONFIRM: {
@@ -512,32 +457,14 @@ void drawJoystickCalibration(MenuItem *item) {
 		if (firstTime) {
 			tft.fillScreen(ST77XX_BLACK);
 			tft.setTextColor(ST77XX_WHITE);
-#if HW_VERSION == 1
-			SET_DEFAULT_FONT;
-			printCentered("Test the joystick calibration.", 51, 3, 102, 6, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-			printCentered("Pull the trigger to continue", 51, 60, 102, 2, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 			tft.setFont(&FreeSansBold12pt7b);
 			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
 			tft.setFont(&FreeSans9pt7b);
 			printCentered("Test the joystick calibration.", SCREEN_WIDTH / 4, 44, SCREEN_WIDTH / 2, 6, 19, ClipBehavior::PRINT_LAST_LINE_CENTERED);
 			printCentered("Pull the trigger to continue", SCREEN_WIDTH / 4, 107, SCREEN_WIDTH / 2, 2, 19, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 		}
 		if (updateTimer >= 17) {
 			updateTimer = 0;
-#if HW_VERSION == 1
-			// X: 131 +- 25, Y: 40 +- 25
-			u8 newX = 131 - (joystickMagnitude * 25 / 100) * cosf(joystickAngle.getf32()) + .5f;
-			u8 newY = 40 + (joystickMagnitude * 25 / 100) * sinf(joystickAngle.getf32()) + .5f;
-			if (newX != lastX || newY != lastY) {
-				tft.fillCircle(lastX, lastY, 3, ST77XX_BLACK);
-				tft.fillCircle(newX, newY, 3, ST77XX_WHITE);
-				tft.drawCircle(131, 40, 25, tft.color565(192, 192, 192));
-				lastX = newX;
-				lastY = newY;
-			}
-#elif HW_VERSION == 2
 			// X: 180 +- 45, Y: 80 +- 45
 			u8 newX = 180 - (joystickMagnitude * 45 / 100) * cosf(joystickAngle.getf32()) + .5f;
 			u8 newY = 80 + (joystickMagnitude * 45 / 100) * sinf(joystickAngle.getf32()) + .5f;
@@ -548,23 +475,16 @@ void drawJoystickCalibration(MenuItem *item) {
 				lastX = newX;
 				lastY = newY;
 			}
-#endif
 		}
 	} break;
 	case JOYSTICK_CAL_ABORT: {
 		if (firstTime) {
 			tft.fillScreen(ST77XX_BLACK);
 			tft.setTextColor(ST77XX_WHITE);
-#if HW_VERSION == 1
-			SET_DEFAULT_FONT;
-			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 0, SCREEN_WIDTH, 1, 8, ClipBehavior::PRINT_LAST_LINE_DOTS);
-			printCentered("Calibration aborted.", SCREEN_WIDTH / 2, 30, SCREEN_WIDTH, 2, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#elif HW_VERSION == 2
 			tft.setFont(&FreeSansBold12pt7b);
 			printCentered("Joystick Calibration", SCREEN_WIDTH / 2, 20, SCREEN_WIDTH, 1, 0, ClipBehavior::PRINT_LAST_LINE_DOTS);
 			tft.setFont(&FreeSans9pt7b);
 			printCentered("Calibration aborted.", SCREEN_WIDTH / 2, 57, SCREEN_WIDTH, 2, 9, ClipBehavior::PRINT_LAST_LINE_CENTERED);
-#endif
 		}
 	} break;
 	}
