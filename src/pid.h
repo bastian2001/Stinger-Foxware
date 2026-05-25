@@ -17,7 +17,7 @@
 #define PID_D_SHIFT 13
 
 extern u16 motorKv;
-extern i16 throttles[4];
+extern i16 throttles[2];
 extern i32 targetRpm;
 extern i32 idleRpm;
 extern i32 rearRpm;
@@ -33,7 +33,7 @@ void checkPrintRpm();
 void blSetFired();
 #endif
 
-void pidLoop(i32 rpmFront, i32 rpmRear);
+void pidLoop(i32 rpm);
 void resetPid();
 void applyPidSettings(MenuItem *_item);
 

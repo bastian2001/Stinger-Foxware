@@ -21,7 +21,7 @@ void setup() {
 	initAnalog();
 	if (bootReason == BootReason::TO_ESC_PASSTHROUGH) {
 		initDisplay();
-		u8 pins[4] = {PIN_MOTOR_BASE, PIN_MOTOR_BASE + 1, PIN_MOTOR_BASE + 2, PIN_MOTOR_BASE + 3};
+		u8 pins[2] = {PIN_MOTOR_BASE, PIN_MOTOR_BASE + 1};
 		beginPassthrough(pins, 4);
 		triggerInit();
 		tft.setFont(&FreeSans9pt7b);

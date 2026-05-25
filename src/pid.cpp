@@ -1,29 +1,29 @@
 #include "global.h"
 
-i16 throttles[4] = {0, 0, 0, 0};
+i16 throttles[2] = {0, 0};
 i32 targetRpm = 0;
 i32 idleRpm = 0;
 i32 rearRpm = 0;
 i32 targetFrontLowThres = 0, targetFrontHighThres = 0, targetRearLowThres = 0, targetRearHighThres = 0;
 u8 frontRearRatio = 0;
-fix64 rpmErrorSum[4] = {0, 0, 0, 0};
+fix64 rpmErrorSum[2] = {0, 0};
 i16 pGainNice = 50, iGainNice = 50, dGainNice = 50;
-PT1 rpmFilter[4] = {PT1(RPM_FILTER_CUTOFF, PID_RATE), PT1(RPM_FILTER_CUTOFF, PID_RATE), PT1(RPM_FILTER_CUTOFF, PID_RATE), PT1(RPM_FILTER_CUTOFF, PID_RATE)};
-PT3 dFilter[4] = {PT3(RPM_D_FILTER_CUTOFF, PID_RATE), PT3(RPM_D_FILTER_CUTOFF, PID_RATE), PT3(RPM_D_FILTER_CUTOFF, PID_RATE), PT3(RPM_D_FILTER_CUTOFF, PID_RATE)};
+PT1 rpmFilter[2] = {PT1(RPM_FILTER_CUTOFF, PID_RATE), PT1(RPM_FILTER_CUTOFF, PID_RATE)};
+PT3 dFilter[2] = {PT3(RPM_D_FILTER_CUTOFF, PID_RATE), PT3(RPM_D_FILTER_CUTOFF, PID_RATE)};
 fix32 rpmPGain = 0, rpmIGain = 0, rpmDGain = 0;
-fix32 rpmError[4] = {0, 0, 0, 0};
+fix32 rpmError[2] = {0, 0};
 u8 minThrottle = 40;
 u8 rpmThresPct = 10;
 fix64 rpmErrorSumLimit = 0;
-bool iTermSet[4] = {false, false, false, false};
+bool iTermSet[2] = {false, false};
 i32 setITermAtRpmFront = 0, setITermAtRpmRear = 0;
 u16 motorKv = 3750;
 elapsedMicros blackboxTimer = 0;
 
 #ifdef USE_BLACKBOX
 #define BLACKBOX_SIZE 1000
-u32 rpms[BLACKBOX_SIZE][4] = {0};
-u16 recThrottles[BLACKBOX_SIZE][4] = {0};
+u32 rpms[BLACKBOX_SIZE][2] = {0};
+u16 recThrottles[BLACKBOX_SIZE][2] = {0};
 i32 pids[BLACKBOX_SIZE][3] = {0};
 i32 rpmIndex = -1;
 u32 blackboxTimes[BLACKBOX_SIZE] = {0};
@@ -36,7 +36,7 @@ i32 yAccel[BLACKBOX_SIZE] = {0};
 #endif
 
 void resetITermSet() {
-	for (u8 i = 0; i < 4; i++) {
+	for (u8 i = 0; i < 2; i++) {
 		iTermSet[i] = false;
 	}
 }
@@ -76,7 +76,7 @@ void applyPidSettings(MenuItem *_item) {
 }
 
 void resetPid() {
-	for (u8 i = 0; i < 4; i++) {
+	for (u8 i = 0; i < 2; i++) {
 		rpmErrorSum[i] = 0;
 		dFilter[i].set(0);
 	}
@@ -148,12 +148,12 @@ void checkPrintRpm() {
 }
 #endif
 
-void pidLoop(i32 rpmFront, i32 rpmRear) {
+void pidLoop(i32 rpm) {
 #ifdef USE_BLACKBOX
 	rpmIndex++;
 #endif
-	i32 target[4] = {rpmFront, rpmFront, rpmRear, rpmRear};
-	static i32 lastRpm[4] = {0};
+	i32 target[2] = {rpm};
+	static i32 lastRpm[2] = {0};
 	const i32 maxRpm = ((fix64)batVoltage * motorKv).geti32();
 
 	// see maxT calculation below for explanation
@@ -169,7 +169,7 @@ void pidLoop(i32 rpmFront, i32 rpmRear) {
 	timeStrength = constrain(timeStrength, 0, 1024);
 	timeStrength = 1024 - timeStrength;
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		fix32 rpm = rpmFilter[i].update(fix32().setRaw((i32)escRpm[i] << RPM_SHIFT));
 		rpmError[i] = fix32().setRaw(target[i] << RPM_SHIFT) - rpm;
 		rpmErrorSum[i] = rpmErrorSum[i] + rpmError[i];
@@ -189,7 +189,7 @@ void pidLoop(i32 rpmFront, i32 rpmRear) {
 		}
 		fix32 pTerm = rpmPGain * rpmError[i];
 		fix32 iTerm = rpmIGain * rpmErrorSum[i];
-		static i32 lastDelta[4] = {0};
+		static i32 lastDelta[2] = {0};
 		i32 delta = lastRpm[i] - (i32)escRpm[i];
 		delta = constrain(delta, lastDelta[i] - 5, lastDelta[i] + 5); // limit jerk
 		lastDelta[i] = delta;

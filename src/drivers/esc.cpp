@@ -1,34 +1,34 @@
 #include "../global.h"
 #include "utils/ringbuffer.h"
 
-BidirDShotX1 *escs[4] = {nullptr, nullptr, nullptr, nullptr};
-volatile u32 escRpm[4] = {0};
-u8 escTemp[4] = {0};
-u8 escTempRaw[4] = {0};
-fix32 escVoltage[4] = {0};
-u8 escCurrent[4] = {0};
-u8 escStatus[4] = {0};
-u32 escStatusCount[4] = {0};
-elapsedMillis escStatusTimer[4] = {0};
-elapsedMillis escErrorTimer[4] = {0};
-elapsedMillis lastTelemetryFrame[4] = {0};
+BidirDShotX1 *escs[2] = {nullptr, nullptr};
+volatile u32 escRpm[2] = {0};
+u8 escTemp[2] = {0};
+u8 escTempRaw[2] = {0};
+fix32 escVoltage[2] = {0};
+u8 escCurrent[2] = {0};
+u8 escStatus[2] = {0};
+u32 escStatusCount[2] = {0};
+elapsedMillis escStatusTimer[2] = {0};
+elapsedMillis escErrorTimer[2] = {0};
+elapsedMillis lastTelemetryFrame[2] = {0};
 u8 escErpmFail = 0;
-RingBuffer<u16> escCommandBuffer[4] = {RingBuffer<u16>(64), RingBuffer<u16>(64), RingBuffer<u16>(64), RingBuffer<u16>(64)};
+RingBuffer<u16> escCommandBuffer[2] = {RingBuffer<u16>(64), RingBuffer<u16>(64)};
 u8 escMaxTemp = 115;
-volatile u8 escPins[4] = {255, 255, 255, 255};
+volatile u8 escPins[2] = {255, 255};
 mutex_t escMutex;
-i8 escTempOffset[4] = {0, 0, 0, 0}; // offset for ESC temperature calibration
+i8 escTempOffset[2] = {0, 0}; // offset for ESC temperature calibration
 u8 knownEscTemp = 23;
 
 void initEscLayout() {
 	u8 layout;
 	if (firstBoot) {
-		layout = 0b11100100;
+		layout = 0b0100;
 		EEPROM.put(EEPROM_POS_MOTOR_LAYOUT, layout);
 	} else {
 		EEPROM.get(EEPROM_POS_MOTOR_LAYOUT, layout);
 	}
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		escPins[i] = PIN_MOTOR_BASE + (layout & 0x03);
 		layout >>= 2;
 	}
@@ -53,7 +53,7 @@ bool calibrateEscTemp(MenuItem *_item) {
 			return false;
 		}
 	}
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		escTempOffset[i] = knownEscTemp - escTempRaw[i];
 		EEPROM.put(EEPROM_POS_ESC_TEMP_OFFSETS + i, escTempOffset[i]);
 	}
@@ -65,7 +65,7 @@ bool calibrateEscTemp(MenuItem *_item) {
 
 void pushToAllCommandBufs(u16 command) {
 	mutex_enter_blocking(&escMutex);
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		escCommandBuffer[i].push(command);
 	}
 	mutex_exit(&escMutex);
@@ -73,7 +73,7 @@ void pushToAllCommandBufs(u16 command) {
 
 void saveEscLayout() {
 	u8 layout = 0;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		layout |= (escPins[i] - PIN_MOTOR_BASE) << (i * 2);
 	}
 	EEPROM.put(EEPROM_POS_MOTOR_LAYOUT, layout);
@@ -81,16 +81,16 @@ void saveEscLayout() {
 		EEPROM.commit();
 }
 
-void updateEscPins(volatile u8 pins[4]) {
-	for (int i = 0; i < 4; i++) {
+void updateEscPins(volatile u8 pins[2]) {
+	for (int i = 0; i < 2; i++) {
 		escPins[i] = pins[i];
 	}
 	// apply mapping to the PIO, not saving the settings yet
 	mutex_enter_blocking(&escMutex);
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		delete escs[i];
 	}
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		escs[i] = new BidirDShotX1(escPins[i], 600, ESC_PIO, i);
 	}
 	mutex_exit(&escMutex);
@@ -99,7 +99,7 @@ void updateEscPins(volatile u8 pins[4]) {
 void initESCs() {
 	mutex_init(&escMutex);
 	mutex_enter_blocking(&escMutex);
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		escs[i] = new BidirDShotX1(escPins[i], 600, ESC_PIO, i);
 		if (firstBoot)
 			EEPROM.put(EEPROM_POS_ESC_TEMP_OFFSETS + i, (i8)0);
@@ -109,25 +109,25 @@ void initESCs() {
 	mutex_exit(&escMutex);
 }
 
-void sendRaw12Bit(const u16 raw[4]) {
+void sendRaw12Bit(const u16 raw[2]) {
 	mutex_enter_blocking(&escMutex);
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		escs[i]->sendRaw12Bit(raw[i]);
 	}
 	mutex_exit(&escMutex);
 }
 
-void sendRaw11Bit(const u16 raw[4]) {
+void sendRaw11Bit(const u16 raw[2]) {
 	mutex_enter_blocking(&escMutex);
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		escs[i]->sendRaw11Bit(raw[i]);
 	}
 	mutex_exit(&escMutex);
 }
 
-void sendThrottles(const i16 throttles[4]) {
+void sendThrottles(const i16 throttles[2]) {
 	mutex_enter_blocking(&escMutex);
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		if (!escCommandBuffer[i].isEmpty()) {
 			escs[i]->sendRaw11Bit(escCommandBuffer[i].pop());
 		} else {
@@ -137,10 +137,10 @@ void sendThrottles(const i16 throttles[4]) {
 	mutex_exit(&escMutex);
 }
 
-u32 telemCounter[4] = {0};
+u32 telemCounter[2] = {0};
 void decodeErpm() {
 	mutex_enter_blocking(&escMutex);
-	for (int m = 0; m < 4; m++) {
+	for (int m = 0; m < 2; m++) {
 		u32 packet = 0;
 		bool fail = false;
 		BidirDshotTelemetryType type = escs[m]->getTelemetryPacket((uint32_t *)&packet);
@@ -181,7 +181,7 @@ void decodeErpm() {
 
 void checkTelemetry() {
 	bool overtemp = false;
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		if (escTemp[i] > escMaxTemp)
 			overtemp = true;
 		if (escStatus[i] & ESC_STATUS_ERROR_MASK) {

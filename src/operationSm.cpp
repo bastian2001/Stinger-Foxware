@@ -45,14 +45,14 @@ elapsedMillis menuOverrideRpmTimer = 0;
 i32 menuOverrideRpm = 0;
 u8 inactivityTimeout = 10;
 elapsedMillis inactivityTimer = 0;
-i16 menuOverrideEsc[4] = {0};
+i16 menuOverrideEsc[2] = {0};
 bool blasterHasFired = false;
 bool firstMenuRun = true;
 u32 thisRampupDuration = 0;
 u16 pusherDecay = 0;
 bool updatingDartCount = false;
 bool stallDetectionEnabled = true;
-i32 stallDetectionCounter[4] = {0};
+i32 stallDetectionCounter[2] = {0};
 
 u8 bootProgress = 0;
 bool bootUnlockNeeded = true;
@@ -139,9 +139,9 @@ void __not_in_flash_func(runOperationSm)() {
 			edtProgress = 0;
 			bool escStatusOk = true;
 			static bool printedEdtMsg = false;
-			for (u8 i = 0; i < 4; i++) {
+			for (u8 i = 0; i < 2; i++) {
 				if (escStatusCount[i] >= 2)
-					edtProgress += 8;
+					edtProgress += 16;
 				else
 					escStatusOk = false; // require at least 2 status frames from each ESC
 			}
@@ -228,7 +228,7 @@ void __not_in_flash_func(runOperationSm)() {
 		if (menuOverrideTimer <= 100) {
 			memcpy(throttles, menuOverrideEsc, sizeof(menuOverrideEsc));
 		} else if (menuOverrideRpmTimer <= 100) {
-			pidLoop(menuOverrideRpm, menuOverrideRpm);
+			pidLoop(menuOverrideRpm);
 		} else {
 			setAllThrottles(0);
 		}
@@ -249,7 +249,7 @@ void __not_in_flash_func(runOperationSm)() {
 		// go to off or idle state when profile is selected
 		// show profile selection on the screen
 		if (CHECK_IDLE_EN) {
-			pidLoop(idleRpm, idleRpm);
+			pidLoop(idleRpm);
 		} else {
 			resetPid();
 			setAllThrottles(0);
@@ -396,7 +396,7 @@ void __not_in_flash_func(runOperationSm)() {
 #endif
 
 		if (CHECK_IDLE_EN) {
-			pidLoop(idleRpm, idleRpm);
+			pidLoop(idleRpm);
 			if (inactivityTimer > 1000 * 60 * inactivityTimeout && inactivityTimeout) setAllThrottles(0);
 		} else {
 			setAllThrottles(0);
@@ -430,7 +430,7 @@ void __not_in_flash_func(runOperationSm)() {
 		// run PID loop to ramp up motors to target RPM
 		static elapsedMillis goodTimer;
 		bool rpmGood = true;
-		pidLoop(targetRpm, rearRpm);
+		pidLoop(targetRpm);
 		if (escRpm[0] < targetFrontLowThres || escRpm[0] > targetFrontHighThres // comment to prevent formatting
 			|| escRpm[1] < targetFrontLowThres || escRpm[1] > targetFrontHighThres // comment to prevent formatting
 			|| escRpm[2] < targetRearLowThres || escRpm[2] > targetRearHighThres // comment to prevent formatting
@@ -467,7 +467,7 @@ void __not_in_flash_func(runOperationSm)() {
 	case STATE_PUSH: {
 		// run PID loop to keep motors at target RPM, turn on solenoid
 		// go to retract state when trigger is released
-		pidLoop(targetRpm, rearRpm);
+		pidLoop(targetRpm);
 #if HW_VERSION == 1
 		if (opStateTime >= pushDuration)
 #elif HW_VERSION == 2
@@ -484,7 +484,7 @@ void __not_in_flash_func(runOperationSm)() {
 		// run PID loop to keep motors at target RPM, turn off solenoid
 		// if continuous mode or burst is enabled, go to push state once retracted
 		// go to rampdown state when trigger is released or in single shot mode
-		pidLoop(targetRpm, rearRpm);
+		pidLoop(targetRpm);
 		if (opStateTime >= 3100) retractPusher();
 #if HW_VERSION == 1
 		if (opStateTime >= retractDuration)
@@ -539,8 +539,7 @@ void __not_in_flash_func(runOperationSm)() {
 			progress -= revAfterFire;
 		i32 finalRpm = idleEnabled ? idleRpm : 0;
 		i32 targetFront = targetRpm + (finalRpm - targetRpm) * progress / rampdownTime;
-		i32 targetRear = rearRpm + (finalRpm - rearRpm) * progress / rampdownTime;
-		pidLoop(targetFront, targetRear);
+		pidLoop(targetFront);
 		if (triggerState && triggerUpdateFlag) {
 			triggerUpdateFlag = false;
 			if (opStateTime > pusherDecay * 1000 && CHECK_ANGLE_OK && CHECK_MAG_SETTINGS && !motorDisableFlags) {
@@ -602,7 +601,7 @@ void __not_in_flash_func(runOperationSm)() {
 	}
 
 	u8 unlock = 0;
-	for (i32 i = 0; i < 4; i++) {
+	for (i32 i = 0; i < 2; i++) {
 		if (!throttles[i] || motorDisableFlags & ~MD_MOTORS_BLOCKED) {
 			stallDetectionCounter[i] = -PID_RATE / 2; // allowance of 100ms+100ms=200ms
 			unlock |= 1 << i;
@@ -637,7 +636,7 @@ void __not_in_flash_func(runOperationSm)() {
 		debugCounter = 0;
 		if (motorDisableFlags) {
 			DEBUG_PRINTF("motor disabled: x%X\n", motorDisableFlags);
-			extern elapsedMillis lastTelemetryFrame[4];
+			extern elapsedMillis lastTelemetryFrame[2];
 			if (motorDisableFlags & MD_NO_TELEMETRY) {
 				DEBUG_PRINTF("Last Telemetry: %d %d %d %d\n", (i32)lastTelemetryFrame[0], (i32)lastTelemetryFrame[1], (i32)lastTelemetryFrame[2], (i32)lastTelemetryFrame[3]);
 			}

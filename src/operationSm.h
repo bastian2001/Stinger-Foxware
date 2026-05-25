@@ -41,7 +41,7 @@ extern elapsedMillis menuOverrideTimer;
 extern elapsedMillis menuOverrideRpmTimer;
 extern i32 menuOverrideRpm;
 extern bool previewIdlingInMenu;
-extern i16 menuOverrideEsc[4];
+extern i16 menuOverrideEsc[2];
 extern u8 enabledProfiles;
 extern u8 bootProgress;
 extern bool newProfileFlag;

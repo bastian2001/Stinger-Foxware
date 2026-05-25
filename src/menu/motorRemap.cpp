@@ -3,7 +3,7 @@
 #include "global.h"
 
 u8 remapState = 0;
-u8 newPinout[4] = {255, 255, 255, 255};
+u8 newPinout[2] = {255, 255};
 bool calibrateSuccess = false;
 enum RemapState : u8 {
 	REMAP_START = 0,
@@ -34,8 +34,8 @@ bool startRemap(MenuItem *_item) {
 	remapState = REMAP_START;
 	lastRemapState = REMAP_ERROR;
 	calibrateSuccess = false;
-	volatile u8 newPins[4];
-	for (int i = 0; i < 4; i++) {
+	volatile u8 newPins[2];
+	for (int i = 0; i < 2; i++) {
 		newPins[i] = PIN_MOTOR_BASE + i;
 		newPinout[i] = 255;
 	}
@@ -147,14 +147,14 @@ bool remapLoop(MenuItem *item) {
 		}
 		if (newState) {
 			selectedEsc = 255;
-			for (int i = 0; i < 4; i++)
+			for (int i = 0; i < 2; i++)
 				menuOverrideEsc[i] = 0;
 		}
 		menuOverrideEsc[remapState - REMAP_ESC1] = minThrottle;
 		menuOverrideTimer = 0;
 		if (gestureUpdated) {
 			gestureUpdated = false;
-			if (lastGesture.type == GESTURE_RELEASE && selectedEsc < 4) {
+			if (lastGesture.type == GESTURE_RELEASE && selectedEsc < 2) {
 				newPinout[selectedEsc] = PIN_MOTOR_BASE + remapState - REMAP_ESC1;
 				menuOverrideEsc[remapState - REMAP_ESC1] = 0;
 				remapState++;
@@ -246,7 +246,7 @@ bool remapLoop(MenuItem *item) {
 					lastEsc = 255;
 					break;
 				}
-				for (int i = 0; i < 4; i++) {
+				for (int i = 0; i < 2; i++) {
 					menuOverrideEsc[i] = i == lastEsc ? minThrottle : 0;
 				}
 				drawMotor(lastEsc, tft.color565(150, 150, 150));
